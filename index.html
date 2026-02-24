@@ -4,892 +4,1906 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quantum Fragility Playground | Virtual Lab</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;}
-  body{background-color:#0a0a0c;color:#e2e8f0;font-family:'Inter',sans-serif;margin:0;}
 
-  /* ── shared ── */
-  .glass-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);transition:all .3s ease;}
-  .glass-card:hover{border-color:rgba(96,165,250,.3);background:rgba(255,255,255,.05);transform:translateY(-4px);}
-  .nav-link:hover{color:#60a5fa;}
-  .btn-primary{background:white;color:black;font-weight:600;padding:.75rem 1.5rem;border-radius:.5rem;transition:transform .2s;}
-  .btn-primary:hover{transform:translateY(-2px);background:#f1f5f9;}
-  .btn-secondary{border:1px solid rgba(255,255,255,.2);padding:.75rem 1.5rem;border-radius:.5rem;transition:all .2s;}
-  .btn-secondary:hover{background:rgba(255,255,255,.05);}
-  .dropdown-content{opacity:0;visibility:hidden;position:absolute;top:100%;left:-10px;min-width:220px;background:#111114;border:1px solid rgba(255,255,255,.1);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6);padding:8px 0;z-index:100;transform:translateY(10px);transition:all .2s ease-in-out;}
-  .group:hover .dropdown-content{opacity:1;visibility:visible;transform:translateY(0);}
-  .dropdown-item{padding:10px 20px;color:#94a3b8;font-size:.85rem;transition:all .2s;display:block;white-space:nowrap;}
-  .dropdown-item:hover{background:rgba(255,255,255,.05);color:#60a5fa;}
-  .tag{display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.05em;padding:3px 10px;border-radius:4px;text-transform:uppercase;background:rgba(59,130,246,.1);color:#60a5fa;}
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-  /* ── PAGE ROUTING ── */
-  .page{display:none;}
-  .page.active{display:block;}
+:root {
+  --bg: #080b12;
+  --bg2: #0d1117;
+  --surface: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(96,165,250,0.35);
+  --text: #e2e8f0;
+  --muted: #475569;
+  --blue: #3b82f6;
+  --blue-bright: #60a5fa;
+  --green: #22c55e;
+  --red: #ef4444;
+  --orange: #f97316;
+  --purple: #a78bfa;
+  --yellow: #eab308;
+}
 
-  /* ── HOME sphere ── */
-  #sphere-container{position:relative;width:420px;height:420px;flex-shrink:0;}
-  #bloch-canvas{display:block;border-radius:50%;cursor:grab;border:1px solid rgba(59,130,246,.18);box-shadow:0 0 50px rgba(37,99,235,.28),0 0 100px rgba(37,99,235,.13);}
-  #bloch-canvas:active{cursor:grabbing;}
-  .alabel{position:absolute;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:rgba(148,163,184,.60);pointer-events:none;user-select:none;line-height:1;}
-  .readout{margin-top:28px;padding:14px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);font-family:'JetBrains Mono',monospace;font-size:11px;color:#64748b;line-height:1.8;}
-  .readout .val{color:#60a5fa;}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
 
-  /* ── LAB PAGE ── */
-  #lab-page{background:#0a0a0c;min-height:100vh;}
-  .lab-layout{display:grid;grid-template-columns:260px 1fr 220px;gap:0;min-height:calc(100vh - 56px);}
+/* ═══ NAV ═══ */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 54px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,11,18,0.96);
+  backdrop-filter: blur(16px);
+  position: sticky; top: 0; z-index: 200;
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.nav-q { width: 30px; height: 30px; background: linear-gradient(135deg,#1d4ed8,#7c3aed); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: #fff; box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+.nav-title { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+.nav-sub { font-size: 8px; color: #1e293b; font-family: 'JetBrains Mono', monospace; letter-spacing: .2em; text-transform: uppercase; margin-top: -2px; }
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-btn { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); cursor: pointer; padding: 6px 12px; border-radius: 6px; border: none; background: transparent; transition: all .18s; }
+.nav-btn:hover, .nav-btn.active { color: var(--text); background: rgba(255,255,255,0.06); }
+.nav-dropdown { position: relative; }
+.nav-menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 190px; background: #111827; border: 1px solid var(--border); border-radius: 10px; padding: 6px; box-shadow: 0 20px 50px rgba(0,0,0,.7); opacity: 0; visibility: hidden; transform: translateY(6px); transition: all .18s; z-index: 300; }
+.nav-dropdown:hover .nav-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+.nav-item { display: block; padding: 9px 12px; font-size: 12px; color: #64748b; border-radius: 6px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.nav-item:hover { background: rgba(255,255,255,.05); color: #94a3b8; }
+.nav-live { font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 700; background: rgba(34,197,94,.1); color: #22c55e; border: 1px solid rgba(34,197,94,.25); padding: 4px 12px; border-radius: 999px; display: flex; align-items: center; gap: 6px; }
+.nav-live::before { content:''; width:5px; height:5px; border-radius:50%; background:#22c55e; animation: pulse 1.4s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
 
-  /* Left panel */
-  .lab-left{padding:20px 16px;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto;}
-  .panel-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin-bottom:14px;}
-  .noise-row{margin-bottom:12px;}
-  .noise-label{font-size:11px;color:#94a3b8;font-family:'JetBrains Mono',monospace;margin-bottom:4px;display:flex;justify-content:space-between;}
-  .noise-val{color:#60a5fa;}
-  input[type=range]{width:100%;height:3px;appearance:none;background:#1e293b;border-radius:99px;outline:none;cursor:pointer;}
-  input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:#60a5fa;box-shadow:0 0 6px rgba(96,165,250,.6);cursor:pointer;}
-  .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-  .preset-btn{padding:8px 4px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.03);color:#94a3b8;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;text-align:center;}
-  .preset-btn:hover{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.07);}
-  .btn-orange{background:#ea580c;color:white;border:none;padding:10px;border-radius:6px;width:100%;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-bottom:6px;}
-  .btn-orange:hover{background:#f97316;}
-  .btn-ghost{background:transparent;color:#64748b;border:none;width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;padding:6px;transition:color .2s;}
-  .btn-ghost:hover{color:#94a3b8;}
-  .state-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-  .state-btn{padding:9px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s;text-align:center;}
-  .state-btn:hover,.state-btn.active{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.1);}
-  .state-btn.active{background:rgba(59,130,246,.2);}
+/* ═══ PAGE ROUTING ═══ */
+.page { display: none; }
+.page.active { display: block; }
 
-  /* Center panel */
-  .lab-center{display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06);}
-  .sphere-area{position:relative;flex:0 0 auto;padding:16px;display:flex;flex-direction:column;align-items:center;border-bottom:1px solid rgba(255,255,255,.06);}
-  .sphere-topbar{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-  .state-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 12px;border-radius:4px;text-transform:uppercase;}
-  .badge-coherent{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.25);}
-  .badge-mixed{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
-  .badge-noisy{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.25);}
-  #pause-btn{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border:1px solid rgba(255,255,255,.15);border-radius:4px;background:transparent;color:#64748b;cursor:pointer;text-transform:uppercase;transition:all .2s;}
-  #pause-btn:hover{border-color:#60a5fa;color:#60a5fa;}
+/* ═══════════════════════════════
+   HOME PAGE
+═══════════════════════════════ */
+.hero { text-align: center; padding: 80px 24px 64px; }
+.hero-pill { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: rgba(34,197,94,.08); color: #22c55e; border: 1px solid rgba(34,197,94,.2); padding: 6px 16px; border-radius: 999px; margin-bottom: 32px; }
+.hero h1 { font-size: clamp(40px,7vw,78px); font-weight: 700; letter-spacing: -.04em; line-height: 1.0; margin-bottom: 22px; }
+.hero h1 span { background: linear-gradient(135deg,#60a5fa,#a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero p { font-size: 15px; color: #64748b; max-width: 520px; margin: 0 auto 40px; line-height: 1.75; font-weight: 400; }
+.hero-actions { display: flex; justify-content: center; gap: 12px; margin-bottom: 72px; }
+.btn-primary { background: #fff; color: #0a0a0c; font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; padding: 14px 28px; border-radius: 8px; border: none; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,255,255,.15); }
+.btn-ghost-lg { border: 1px solid rgba(255,255,255,.12); background: transparent; color: #94a3b8; font-weight: 700; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; padding: 14px 28px; border-radius: 8px; cursor: pointer; transition: all .15s; }
+.btn-ghost-lg:hover { background: rgba(255,255,255,.05); color: #e2e8f0; }
+.hero-stats { display: flex; justify-content: center; gap: 64px; padding: 28px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 88px; }
+.stat-n { font-size: 44px; font-weight: 700; letter-spacing: -.04em; }
+.stat-l { font-size: 9px; font-family: 'JetBrains Mono', monospace; letter-spacing: .2em; text-transform: uppercase; color: #1e293b; margin-top: 4px; font-weight: 700; }
 
-  #lab-canvas{display:block;border-radius:50%;cursor:grab;border:1px solid rgba(59,130,246,.2);box-shadow:0 0 40px rgba(37,99,235,.22),0 0 80px rgba(37,99,235,.10);}
-  #lab-canvas:active{cursor:grabbing;}
+/* Science section */
+.science { max-width: 1100px; margin: 0 auto; padding: 0 32px 96px; display: grid; grid-template-columns: 1fr 420px; gap: 80px; align-items: center; }
+.science-label { font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--blue); margin-bottom: 14px; display: block; }
+.science h2 { font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 18px; line-height: 1.15; }
+.science p { color: #475569; line-height: 1.8; margin-bottom: 16px; font-size: 14px; }
+.readout-box { margin-top: 24px; padding: 16px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,.05); background: rgba(255,255,255,.015); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #334155; line-height: 2.0; }
+.readout-box .v { color: var(--blue-bright); }
 
-  /* Graph area */
-  .graph-area{padding:12px 16px;flex:1;}
-  .graph-legend{display:flex;gap:16px;margin-bottom:8px;}
-  .legend-item{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
-  .legend-dot{width:8px;height:8px;border-radius:50%;}
-  #graph-canvas{width:100%;height:90px;display:block;}
-  #fidelity-bar-canvas{width:100%;height:22px;display:block;margin-top:6px;}
+/* Cards */
+.cards { max-width: 1100px; margin: 0 auto; padding: 0 32px 80px; }
+.cards h2 { font-size: 30px; font-weight: 700; letter-spacing: -.03em; text-align: center; margin-bottom: 6px; }
+.cards .sub { text-align: center; color: #334155; font-size: 13px; margin-bottom: 44px; }
+.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px; cursor: pointer; transition: all .25s; }
+.card:hover { background: rgba(255,255,255,.045); border-color: var(--border-hover); transform: translateY(-4px); }
+.card-ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 18px; }
+.card h3 { font-size: 16px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 10px; }
+.card p { color: #2d3d50; font-size: 12px; line-height: 1.7; margin-bottom: 18px; }
+.pill { display: inline-block; font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: .07em; padding: 3px 9px; border-radius: 4px; text-transform: uppercase; margin-right: 4px; }
+.pill-b { background: rgba(59,130,246,.1); color: #60a5fa; }
+.pill-p { background: rgba(167,139,250,.1); color: #a78bfa; }
+.pill-o { background: rgba(249,115,22,.1); color: #fb923c; }
+.pill-g { background: rgba(34,197,94,.1); color: #4ade80; }
+footer { border-top: 1px solid var(--border); padding: 40px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #0f172a; letter-spacing: .18em; text-transform: uppercase; }
 
-  /* Right panel */
-  .lab-right{padding:20px 14px;overflow-y:auto;}
-  .stat-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.04);}
-  .stat-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:#475569;text-transform:uppercase;letter-spacing:.08em;}
-  .stat-val{font-size:16px;font-family:'JetBrains Mono',monospace;font-weight:700;color:#e2e8f0;}
-  .stat-val.green{color:#22c55e;}
-  .stat-val.yellow{color:#eab308;}
-  .stat-val.red{color:#ef4444;}
+/* ═══════════════════════════════
+   LAB PAGE
+═══════════════════════════════ */
+#lab-page { min-height: 100vh; }
+.lab-hdr { padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.lab-hdr-ico { width: 28px; height: 28px; background: rgba(34,197,94,.12); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.lab-hdr h1 { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
+.lab-hdr p { font-size: 11px; color: #1e293b; margin-left: 12px; }
 
-  .filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
-  .filter-btn{padding:6px 4px;border:1px solid rgba(255,255,255,.1);border-radius:5px;background:rgba(255,255,255,.03);color:#64748b;font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;text-align:center;}
-  .filter-btn:hover,.filter-btn.active{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.08);}
-  .snap-item{padding:8px 10px;border:1px solid rgba(255,255,255,.06);border-radius:6px;background:rgba(255,255,255,.02);margin-bottom:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#475569;}
-  .snap-item .snap-label{color:#94a3b8;font-size:10px;margin-bottom:2px;}
+.lab-body { display: grid; grid-template-columns: 240px 1fr 220px; min-height: calc(100vh - 54px - 52px - 38px); }
 
-  /* lab header breadcrumb */
-  .lab-header{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
-  .lab-header h1{font-size:18px;font-weight:800;letter-spacing:-.02em;}
-  .lab-header p{font-size:11px;color:#64748b;margin-left:16px;}
-  .lab-icon{width:28px;height:28px;background:rgba(34,197,94,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+/* LEFT */
+.lab-left { padding: 18px 14px; border-right: 1px solid var(--border); overflow-y: auto; }
+.pnl-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: #1e293b; margin-bottom: 12px; }
+.noise-row { margin-bottom: 14px; }
+.noise-lbl { display: flex; justify-content: space-between; font-size: 9px; font-family: 'JetBrains Mono', monospace; color: #475569; margin-bottom: 5px; }
+.noise-val { color: var(--blue); }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 3px; background: #1e293b; border-radius: 99px; outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 8px rgba(59,130,246,.5); cursor: pointer; }
+.div { height: 1px; background: var(--border); margin: 14px 0; }
+.preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.preset-btn { padding: 8px 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: #475569; font-size: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .18s; text-align: center; }
+.preset-btn:hover { border-color: var(--blue); color: var(--blue-bright); background: rgba(59,130,246,.07); }
+.btn-action { width: 100%; padding: 10px; border: none; border-radius: 7px; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; margin-bottom: 6px; transition: all .18s; }
+.btn-pause { background: #ea580c; color: #fff; }
+.btn-pause:hover { background: #f97316; }
+.btn-pause.active { background: #1d4ed8; }
+.btn-pause.active:hover { background: #2563eb; }
+.btn-reset { background: transparent; color: #334155; border: 1px solid var(--border); }
+.btn-reset:hover { color: #64748b; border-color: rgba(255,255,255,.15); }
+.state-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.state-btn { padding: 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: #475569; font-size: 11px; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all .18s; text-align: center; }
+.state-btn:hover, .state-btn.on { border-color: var(--blue); color: var(--blue-bright); background: rgba(59,130,246,.1); }
 
-  /* divider */
-  .section-divider{height:1px;background:rgba(255,255,255,.05);margin:14px 0;}
+/* CENTER */
+.lab-center { display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+.sphere-wrap { flex: 0 0 auto; padding: 14px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid var(--border); }
+.sphere-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.badge { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: .12em; padding: 4px 12px; border-radius: 4px; text-transform: uppercase; }
+.badge-ok { background: rgba(34,197,94,.12); color: #22c55e; border: 1px solid rgba(34,197,94,.2); }
+.badge-warn { background: rgba(251,146,60,.12); color: #fb923c; border: 1px solid rgba(251,146,60,.2); }
+.badge-err { background: rgba(239,68,68,.12); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
+.sphere-btns { display: flex; gap: 6px; }
+.mini-btn { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: .08em; padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: #475569; cursor: pointer; text-transform: uppercase; transition: all .18s; }
+.mini-btn:hover { border-color: var(--blue-bright); color: var(--blue-bright); }
+#lab-canvas { display: block; border-radius: 50%; cursor: grab; border: 1px solid rgba(59,130,246,.15); box-shadow: 0 0 60px rgba(37,99,235,.2), 0 0 120px rgba(37,99,235,.08); }
+#lab-canvas:active { cursor: grabbing; }
+.sphere-hint { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #0f172a; margin-top: 6px; }
+
+/* Graph */
+.graph-area { padding: 14px 18px; flex: 1; }
+.graph-legend { display: flex; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; opacity: .5; transition: opacity .2s; }
+.leg.on { opacity: 1; }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+#graph-canvas { width: 100%; display: block; }
+#fid-canvas { width: 100%; display: block; margin-top: 7px; }
+
+/* RIGHT */
+.lab-right { padding: 18px 14px; overflow-y: auto; }
+.stat-row { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 13px; margin-bottom: 13px; border-bottom: 1px solid rgba(255,255,255,.03); }
+.stat-label { font-size: 8px; font-family: 'JetBrains Mono', monospace; color: #1e293b; text-transform: uppercase; letter-spacing: .14em; }
+.stat-num { font-size: 17px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.stat-num.g { color: #22c55e; } .stat-num.y { color: #eab308; } .stat-num.r { color: #ef4444; } .stat-num.w { color: #e2e8f0; }
+.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.filt-btn { padding: 7px 4px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: #1e293b; font-size: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; cursor: pointer; transition: all .18s; text-align: center; }
+.filt-btn:hover, .filt-btn.on { border-color: var(--blue); color: var(--blue-bright); background: rgba(59,130,246,.08); }
+.snap-list { margin-top: 4px; }
+.snap-item { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); margin-bottom: 5px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #334155; }
+.snap-t { color: #2d3d50; font-size: 8px; margin-bottom: 2px; }
+.no-snap { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #0f172a; text-align: center; padding: 18px 0; }
+.add-snap-btn { background: transparent; color: #1e293b; border: none; width: 100%; font-size: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; padding: 6px; transition: color .2s; margin-top: 4px; }
+.add-snap-btn:hover { color: #475569; }
+
+.lab-footer { border-top: 1px solid var(--border); padding: 10px 24px; display: flex; gap: 20px; justify-content: center; }
+.lab-footer span { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #0f172a; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; }
+
+/* ═══════════════════════════════
+   Q vs C PAGE
+═══════════════════════════════ */
+#qvc-page { min-height: 100vh; padding: 40px; }
+.qvc-hdr { margin-bottom: 28px; }
+.qvc-hdr h1 { font-size: 26px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 6px; }
+.qvc-hdr p { color: #475569; font-size: 13px; }
+.qvc-controls { display: flex; align-items: center; gap: 24px; margin-bottom: 28px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; flex-wrap: wrap; }
+.qvc-ctrl-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #475569; margin-right: 8px; }
+.qvc-noise-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--blue-bright); width: 40px; }
+.qvc-main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.qvc-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.qvc-card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.qvc-card-hdr h3 { font-size: 15px; font-weight: 700; }
+.qvc-stat-pill { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+.qvc-graph { width: 100%; display: block; border-radius: 8px; margin-bottom: 14px; }
+.qvc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.qvc-stat { background: rgba(0,0,0,.3); border-radius: 8px; padding: 10px 12px; }
+.qvc-stat-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #334155; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 4px; }
+.qvc-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; }
+.qvc-diff { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.qvc-diff h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+.diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.diff-item { padding: 14px; border-radius: 10px; }
+.diff-item h4 { font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+.diff-item p { font-size: 12px; color: #475569; line-height: 1.65; }
+
+
+
+/* ── Gate Builder extra styles ── */
+#gate-page { min-height:100vh; background:var(--bg); }
+.gb-layout { display:grid; grid-template-columns:180px 1fr 300px; gap:0; min-height:calc(100vh - 54px); }
+
+/* Palette */
+.gb-palette { padding:18px 14px; border-right:1px solid var(--border); overflow-y:auto; background:var(--bg2); }
+.gb-palette-title { font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#1e293b; margin-bottom:14px; }
+.gb-gate-item {
+  display:flex; align-items:center; gap:8px; padding:10px 10px;
+  border:1px solid var(--border); border-radius:8px; margin-bottom:8px;
+  cursor:grab; user-select:none; transition:all .18s; background:var(--surface);
+}
+.gb-gate-item:hover { transform:translateX(3px); border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.05); }
+.gb-gate-item:active { cursor:grabbing; opacity:.7; }
+.gb-gate-sym { width:34px; height:34px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:900; flex-shrink:0; }
+.gb-gate-info { flex:1; }
+.gb-gate-nm { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; }
+.gb-gate-desc { font-family:'JetBrains Mono',monospace; font-size:8px; opacity:.5; }
+.gb-tip { padding:10px; background:rgba(0,0,0,.3); border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:8px; color:#1e293b; line-height:1.8; margin-top:12px; }
+.gb-tip b { color:#334155; }
+
+/* Circuit area */
+.gb-circuit { padding:20px; border-right:1px solid var(--border); overflow-y:auto; }
+.gb-circuit-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.gb-circuit-hdr h2 { font-size:15px; font-weight:700; letter-spacing:-.02em; }
+.gb-circuit-btns { display:flex; gap:8px; }
+.gb-btn-run { background:#22c55e; color:#000; border:none; padding:8px 18px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .18s; }
+.gb-btn-run:hover { background:#4ade80; }
+.gb-btn-clear { background:transparent; color:#475569; border:1px solid var(--border); padding:8px 14px; border-radius:7px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .18s; }
+.gb-btn-clear:hover { border-color:#ef4444; color:#ef4444; }
+
+/* Wire rows */
+.gb-wire-row { margin-bottom:16px; }
+.gb-wire-label { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.gb-wire-qlabel { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:#475569; width:28px; flex-shrink:0; }
+.gb-wire-init { font-family:'JetBrains Mono',monospace; font-size:9px; color:#1e293b; }
+.gb-wire-track { position:relative; display:flex; align-items:center; min-height:56px; }
+.gb-wire-line { position:absolute; top:50%; left:0; right:0; height:2px; background:rgba(255,255,255,.1); border-radius:2px; pointer-events:none; }
+.gb-drop-zone {
+  position:relative; z-index:1; display:flex; align-items:center; flex-wrap:wrap;
+  gap:6px; min-height:56px; flex:1; padding:8px 10px;
+  border:2px dashed rgba(255,255,255,.06); border-radius:10px;
+  background:rgba(0,0,0,.2); transition:all .18s;
+}
+.gb-drop-zone.drag-over { border-color:#3b82f6; background:rgba(59,130,246,.08); box-shadow:0 0 0 1px rgba(59,130,246,.3); }
+.gb-drop-hint { font-family:'JetBrains Mono',monospace; font-size:9px; color:#1e293b; pointer-events:none; }
+
+/* Gate chips on wire */
+.gb-chip {
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  width:46px; height:44px; border-radius:8px; border:none; cursor:pointer;
+  font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:900; color:#fff;
+  flex-shrink:0; transition:transform .15s; user-select:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.gb-chip:hover { transform:scale(1.1) translateY(-2px); }
+.gb-chip .chip-sub { font-size:7px; font-weight:600; opacity:.7; margin-top:1px; }
+.gb-chip .gb-remove { position:absolute; top:-6px; right:-6px; width:15px; height:15px;
+  background:#ef4444; border-radius:50%; font-size:8px; font-weight:900; color:#fff;
+  display:none; align-items:center; justify-content:center; cursor:pointer; line-height:1;
+  box-shadow:0 2px 4px rgba(0,0,0,.5); }
+.gb-chip:hover .gb-remove { display:flex; }
+
+/* CNOT special rendering */
+.gb-chip.cnot-ctrl { font-size:18px; background:#1a1a0a !important; border:2px solid #eab308; }
+.gb-chip.cnot-tgt  { font-size:20px; background:#1a1a0a !important; border:2px solid #eab308; }
+
+/* Measurement bar */
+.gb-measure { margin-top:16px; padding:12px 14px; background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:10px; display:flex; align-items:flex-start; gap:12px; }
+.gb-measure-label { font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#334155; flex-shrink:0; padding-top:2px; }
+.gb-measure-val { font-family:'JetBrains Mono',monospace; font-size:10px; color:#60a5fa; line-height:1.7; }
+
+/* Step log */
+.gb-step-log { margin-top:16px; background:rgba(0,0,0,.25); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.gb-step-log-hdr { padding:10px 14px; border-bottom:1px solid var(--border); font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:#1e293b; }
+.gb-step-row { display:flex; align-items:flex-start; gap:10px; padding:8px 14px; border-bottom:1px solid rgba(255,255,255,.03); transition:background .15s; }
+.gb-step-row:hover { background:rgba(255,255,255,.02); }
+.gb-step-gate { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; width:42px; flex-shrink:0; }
+.gb-step-info { font-family:'JetBrains Mono',monospace; font-size:9px; color:#475569; line-height:1.7; }
+.gb-step-info b { color:#64748b; }
+
+/* Right panel */
+.gb-right { padding:18px 14px; overflow-y:auto; background:var(--bg2); }
+.gb-right-title { font-family:'JetBrains Mono',monospace; font-size:8px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#1e293b; margin-bottom:12px; }
+#gate-canvas { display:block; border-radius:50%; cursor:grab; border:1px solid rgba(167,139,250,.2); box-shadow:0 0 40px rgba(139,92,246,.15); }
+#gate-canvas:active { cursor:grabbing; }
+
+.gb-readout { margin-top:14px; font-family:'JetBrains Mono',monospace; font-size:10px; color:#334155; line-height:2.1; }
+.gb-readout .v { color:#c084fc; font-weight:700; }
+.gb-readout .v2 { color:#fbbf24; font-weight:700; }
+
+/* Prob bars */
+.gb-prob-section { margin-top:14px; }
+.gb-prob-bar-row { margin-bottom:8px; }
+.gb-prob-bar-label { display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:9px; margin-bottom:3px; }
+.gb-prob-bar-label .ket { color:#94a3b8; font-weight:700; }
+.gb-prob-bar-label .pct { color:#60a5fa; }
+.gb-prob-track { height:8px; background:rgba(255,255,255,.05); border-radius:4px; overflow:hidden; }
+.gb-prob-fill { height:100%; border-radius:4px; transition:width .4s ease; }
+
+/* Matrix display */
+.gb-matrix { margin-top:14px; padding:12px; background:rgba(0,0,0,.3); border-radius:8px; border:1px solid var(--border); font-family:'JetBrains Mono',monospace; font-size:10px; }
+.gb-matrix-title { font-size:8px; color:#1e293b; text-transform:uppercase; letter-spacing:.15em; margin-bottom:8px; font-weight:700; }
+.gb-matrix-body { color:#475569; line-height:2; }
+.gb-matrix-body .mv { color:#a78bfa; }
+
+/* State badge */
+.gb-state-badge { display:inline-block; margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.1em; padding:4px 12px; border-radius:4px; text-transform:uppercase; background:rgba(167,139,250,.12); color:#a78bfa; border:1px solid rgba(167,139,250,.25); }
+
+/* Entanglement indicator */
+.gb-entangle { margin-top:10px; padding:8px 12px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; display:none; }
+.gb-entangle.on { display:block; background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.25); color:#fbbf24; }
+
 </style>
+
 </head>
-<body class="selection:bg-blue-500/30">
+<body>
 
-<!-- ════════════════════════════════════════
-     SHARED NAV
-════════════════════════════════════════ -->
-<nav id="main-nav" class="flex items-center justify-between px-12 py-3.5 border-b border-white/5 bg-[#0a0a0c]/95 backdrop-blur-md sticky top-0 z-50">
-  <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('home')">
-    <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white">Q</div>
+<!-- ═══════════ NAV ═══════════ -->
+<nav>
+  <div class="nav-brand" onclick="showPage('home')">
+    <div class="nav-q">Q</div>
     <div>
-      <span class="text-base font-extrabold tracking-tight">QFragility</span>
-      <div class="text-[9px] text-slate-600 font-mono tracking-widest uppercase -mt-0.5">Virtual Quantum Lab</div>
+      <div class="nav-title">QFragility</div>
+      <div class="nav-sub">Virtual Quantum Lab</div>
     </div>
   </div>
 
-  <div class="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wide text-slate-400">
-    <a href="#" class="nav-link text-white transition-colors" onclick="showPage('home');return false;">HOME</a>
-    <div class="group relative">
-      <button class="nav-link flex items-center gap-1.5 py-2 uppercase">Labs <span class="text-[10px] opacity-50">▼</span></button>
-      <div class="dropdown-content">
-        <a href="#" class="dropdown-item" onclick="showPage('lab');return false;">🧪 Fragility Lab</a>
-        <a href="#" class="dropdown-item">⚖️ Quantum vs Classical</a>
-        <a href="#" class="dropdown-item">🔧 Gate Builder</a>
+  <div class="nav-links">
+    <button class="nav-btn active" id="nl-home" onclick="showPage('home')">HOME</button>
+    <div class="nav-dropdown">
+      <button class="nav-btn" id="nl-labs">LABS ▾</button>
+      <div class="nav-menu">
+        <div class="nav-item" onclick="showPage('lab')">🧪 Fragility Lab</div>
+        <div class="nav-item" onclick="showPage('qvc')">⚖️ Quantum vs Classical</div>
+        <div class="nav-item" onclick="showPage('gate')">🔧 Gate Builder</div>
       </div>
     </div>
-    <div class="group relative">
-      <button class="nav-link flex items-center gap-1.5 py-2 uppercase">Visualizers <span class="text-[10px] opacity-50">▼</span></button>
-      <div class="dropdown-content">
-        <a href="#" class="dropdown-item">Qiskit Visualizer</a>
-        <a href="#" class="dropdown-item">QASM Visualizer</a>
+    <div class="nav-dropdown">
+      <button class="nav-btn">VISUALIZERS ▾</button>
+      <div class="nav-menu">
+        <div class="nav-item">📊 Qiskit Visualizer</div>
+        <div class="nav-item">📋 QASM Visualizer</div>
       </div>
     </div>
-    <div class="group relative">
-      <button class="nav-link flex items-center gap-1.5 py-2 uppercase">Experiments <span class="text-[10px] opacity-50">▼</span></button>
-      <div class="dropdown-content">
-        <a href="#" class="dropdown-item">Stern – Gerlach</a>
-        <a href="#" class="dropdown-item">Cavity QED</a>
-        <a href="#" class="dropdown-item">Bell State</a>
+    <div class="nav-dropdown">
+      <button class="nav-btn">EXPERIMENTS ▾</button>
+      <div class="nav-menu">
+        <div class="nav-item">🔬 Stern–Gerlach</div>
+        <div class="nav-item">⚡ Cavity QED</div>
+        <div class="nav-item">🔗 Bell State</div>
       </div>
     </div>
-    <a href="#" class="nav-link py-2 uppercase">Learn</a>
-    <a href="#" class="nav-link py-2 uppercase">About</a>
+    <button class="nav-btn">LEARN</button>
+    <button class="nav-btn">ABOUT</button>
   </div>
 
-  <div class="text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 px-3 py-1.5 rounded-full border border-blue-400/20">
-    HACKNOVA 2.0 LIVE
-  </div>
+  <div class="nav-live">HACKNOVA 2.0 LIVE</div>
 </nav>
 
-<!-- ════════════════════════════════════════
+
+<!-- ═══════════════════════════════════════
      HOME PAGE
-════════════════════════════════════════ -->
+═══════════════════════════════════════ -->
 <div id="home-page" class="page active">
-  <main class="max-w-6xl mx-auto px-6 pt-24 pb-12 text-center">
-    <h1 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-[1.1]">Quantum Fragility<br/>Playground</h1>
-    <p class="text-slate-400 text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-      A high-fidelity virtual lab for exploring the delicate nature of quantum bits. Observe decoherence, master quantum gates, and build the future.
-    </p>
-    <div class="flex justify-center gap-5 mb-20">
+  <div class="hero">
+    <div class="hero-pill">VERSION 2.0 IS LIVE</div>
+    <h1>Quantum Fragility<br><span>Playground</span></h1>
+    <p>A high-fidelity virtual lab for exploring the delicate nature of quantum bits. Observe decoherence, master quantum gates, and build the future.</p>
+    <div class="hero-actions">
       <button class="btn-primary" onclick="showPage('lab')">START FRAGILITY LAB</button>
-      <button class="btn-secondary">RUN EXPERIMENTS</button>
+      <button class="btn-ghost-lg" onclick="showPage('qvc')">RUN EXPERIMENTS</button>
     </div>
-    <div class="flex justify-center gap-20 mb-24 border-y border-white/5 py-10">
-      <div class="text-center"><div class="text-4xl font-bold">7</div><div class="text-[10px] tracking-widest text-slate-500 uppercase mt-1 font-semibold">Noise Channels</div></div>
-      <div class="text-center"><div class="text-4xl font-bold">9</div><div class="text-[10px] tracking-widest text-slate-500 uppercase mt-1 font-semibold">Quantum Gates</div></div>
-      <div class="text-center"><div class="text-4xl font-bold">5</div><div class="text-[10px] tracking-widest text-slate-500 uppercase mt-1 font-semibold">Experiments</div></div>
+    <div class="hero-stats">
+      <div><div class="stat-n">7</div><div class="stat-l">Noise Channels</div></div>
+      <div><div class="stat-n">9</div><div class="stat-l">Quantum Gates</div></div>
+      <div><div class="stat-n">5</div><div class="stat-l">Experiments</div></div>
     </div>
-  </main>
+  </div>
 
-  <section class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center mb-40">
-    <div class="text-left">
-      <span class="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4 block font-bold">The Science</span>
-      <h2 class="text-4xl font-bold mb-6">What is quantum fragility?</h2>
-      <p class="text-slate-400 mb-5 leading-relaxed">Unlike classical bits that are robustly 0 or 1, qubits are extremely delicate. Interaction with the environment causes <strong class="text-slate-200">decoherence</strong>, where quantum superposition and entanglement are lost to thermal noise and background radiation.</p>
-      <p class="text-slate-400 mb-8 leading-relaxed">In this playground, you can simulate depolarizing, phase-flip, bit-flip, and amplitude damping noise to see how they shrink the Bloch vector.</p>
-      <a href="#" class="text-blue-400 border-b-2 border-blue-400/20 pb-1 hover:border-blue-400 hover:text-blue-300 transition-all font-semibold">Learn more about the physics →</a>
-      <div class="readout">
-        <div style="color:#475569;font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;">Live State Vector</div>
-        <div>θ = <span class="val" id="h-theta">45.0°</span></div>
-        <div>φ = <span class="val" id="h-phi">0.0°</span></div>
-        <div style="margin-top:4px;color:#334155;">|ψ⟩ = cos(θ/2)|0⟩ + e<sup style="font-size:8px">iφ</sup>sin(θ/2)|1⟩</div>
+  <div class="science">
+    <div>
+      <span class="science-label">The Science</span>
+      <h2>What is quantum fragility?</h2>
+      <p>Unlike classical bits that are robustly 0 or 1, qubits are extremely delicate. Interaction with the environment causes <strong style="color:#94a3b8">decoherence</strong>, where quantum superposition and entanglement are lost to thermal noise and background radiation.</p>
+      <p>In this playground, you can simulate depolarizing, phase-flip, bit-flip, and amplitude damping noise to see how they shrink the Bloch vector from the surface toward the origin.</p>
+      <a href="#" style="color:var(--blue);font-size:13px;font-weight:600;">Learn more about the physics →</a>
+      <div class="readout-box">
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#0f172a;margin-bottom:6px;">Live State Vector</div>
+        <div>θ = <span class="v" id="h-theta">45.0°</span></div>
+        <div>φ = <span class="v" id="h-phi">0.0°</span></div>
+        <div style="margin-top:4px;color:#1e293b;">|ψ⟩ = cos(θ/2)|0⟩ + e<sup style="font-size:8px">iφ</sup>sin(θ/2)|1⟩</div>
       </div>
     </div>
-    <div class="flex justify-center items-center">
-      <div id="sphere-container">
-        <canvas id="bloch-canvas" width="420" height="420"></canvas>
-        <span class="alabel" style="top:4px;left:50%;transform:translateX(-50%)">|0⟩</span>
-        <span class="alabel" style="bottom:4px;left:50%;transform:translateX(-50%)">|1⟩</span>
-        <span class="alabel" style="top:50%;right:2px;transform:translateY(-50%)">|+⟩</span>
-        <span class="alabel" style="top:50%;left:2px;transform:translateY(-50%)">|−⟩</span>
-        <span class="alabel" style="bottom:12px;right:14px;font-size:9px;color:rgba(71,85,105,.4)">drag · rotate</span>
-      </div>
+    <div style="position:relative;width:420px;height:420px;">
+      <canvas id="home-canvas" width="420" height="420" style="border-radius:50%;cursor:grab;border:1px solid rgba(59,130,246,0.15);box-shadow:0 0 60px rgba(37,99,235,.2),0 0 130px rgba(37,99,235,.08);"></canvas>
+      <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(100,116,139,.5);">|0⟩</div>
+      <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(100,116,139,.5);">|1⟩</div>
     </div>
-  </section>
+  </div>
 
-  <section class="max-w-6xl mx-auto px-6 mb-32">
-    <div class="mb-14 text-center">
-      <h2 class="text-3xl font-bold">Explore the Playground</h2>
-      <p class="text-slate-500 mt-2 text-sm">Navigate through our specialized modules designed to take you from a curious student to a quantum pioneer.</p>
+  <div class="cards">
+    <h2>Explore the Playground</h2>
+    <p class="sub">Navigate through specialized modules from curious student to quantum pioneer.</p>
+    <div class="cards-grid">
+      <div class="card" onclick="showPage('lab')"><div class="card-ico" style="background:rgba(34,197,94,.1)">🧪</div><h3>Fragility Lab</h3><p>Interact with 4 core noise channels and observe decoherence in real-time with 3D visuals and live graphs.</p><div><span class="pill pill-b">FEATURED</span><span class="pill pill-p">LABORATORY</span></div></div>
+      <div class="card" onclick="showPage('qvc')"><div class="card-ico" style="background:rgba(100,116,139,.1)">⚖️</div><h3>Q vs Classical</h3><p>Compare the stability of classical bits against the fragility of quantum qubits under identical noise conditions.</p><div><span class="pill pill-b">COMPARISON</span></div></div>
+      <div class="card" onclick="showPage('gate')"><div class="card-ico" style="background:rgba(249,115,22,.1)">🔧</div><h3>Gate Builder</h3><p>Drag-and-drop H, X, Y, Z, CNOT gates to build circuits and watch the Bloch vector rotate through transformations.</p><div><span class="pill pill-o">BUILDER</span></div></div>
+      <div class="card"><div class="card-ico" style="background:rgba(59,130,246,.1)">🔬</div><h3>Experiments</h3><p>Run Stern-Gerlach, Bell State, Cavity QED, Deutsch-Jozsa and Ramsey Interferometry on our virtual backend.</p><div><span class="pill pill-b">ACADEMIC</span></div></div>
+      <div class="card"><div class="card-ico" style="background:rgba(16,185,129,.1)">📊</div><h3>Visualizers</h3><p>Visualize Qiskit and QASM circuit outputs with step-by-step state evolution and probability distributions.</p><div><span class="pill pill-g">VISUALIZATION</span></div></div>
+      <div class="card"><div class="card-ico" style="background:rgba(234,179,8,.1)">📚</div><h3>Learn</h3><p>New to Quantum? Follow our course and test your knowledge with interactive quizzes and visual guides.</p><div><span class="pill" style="background:rgba(234,179,8,.1);color:#facc15;">EDUCATION</span></div></div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="glass-card p-8 rounded-2xl flex flex-col h-full cursor-pointer" onclick="showPage('lab')">
-        <div class="w-10 h-10 bg-green-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">🧪</div>
-        <h3 class="text-xl font-bold mb-3">Fragility Lab</h3>
-        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Interact with 4 core noise channels and observe decoherence in real-time with 3D visuals and live graphs.</p>
-        <div class="flex gap-2 flex-wrap"><span class="tag">FEATURED</span><span class="tag" style="background:rgba(168,85,247,.1);color:#c084fc;">LABORATORY</span></div>
-      </div>
-      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
-        <div class="w-10 h-10 bg-slate-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">⚖️</div>
-        <h3 class="text-xl font-bold mb-3">Q vs C</h3>
-        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Compare the stability of classical bits against the fragility of quantum qubits under identical noise.</p>
-        <div class="flex gap-2"><span class="tag">COMPARISON</span></div>
-      </div>
-      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
-        <div class="w-10 h-10 bg-orange-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">🔧</div>
-        <h3 class="text-xl font-bold mb-3">Gate Builder</h3>
-        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Drag-and-drop gates to build circuits and watch the Bloch vector rotate through transformations.</p>
-        <div class="flex gap-2"><span class="tag" style="background:rgba(249,115,22,.1);color:#fb923c;">BUILDER</span></div>
-      </div>
-      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
-        <div class="w-10 h-10 bg-blue-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">🔬</div>
-        <h3 class="text-xl font-bold mb-3">Experiments</h3>
-        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Run Stern-Gerlach, Bell State, Cavity QED, Deutsch-Jozsa and Ramsey Interferometry on our virtual backend.</p>
-        <div class="flex gap-2"><span class="tag">ACADEMIC</span></div>
-      </div>
-      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
-        <div class="w-10 h-10 bg-emerald-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">📊</div>
-        <h3 class="text-xl font-bold mb-3">Visualizers</h3>
-        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Visualize Qiskit and QASM circuit outputs with step-by-step state evolution and probability distributions.</p>
-        <div class="flex gap-2"><span class="tag" style="background:rgba(16,185,129,.1);color:#34d399;">VISUALIZATION</span></div>
-      </div>
-      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
-        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">📚</div>
-        <h3 class="text-xl font-bold mb-3">Learn</h3>
-        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">New to Quantum? Follow our course and test your knowledge with interactive quizzes and visual guides.</p>
-        <div class="flex gap-2"><span class="tag" style="background:rgba(234,179,8,.1);color:#facc15;">EDUCATION</span></div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="border-t border-white/5 py-16 text-center text-slate-600 text-[10px] font-mono tracking-widest uppercase">
-    &copy; 2026 QFRAGILITY VIRTUAL LAB | PHYSICALLY INSPIRED & TECHNICALLY DRIVEN
-  </footer>
-</div><!-- /home-page -->
+  </div>
+  <footer>© 2026 QFRAGILITY VIRTUAL LAB | PHYSICALLY INSPIRED & TECHNICALLY DRIVEN</footer>
+</div>
 
 
-<!-- ════════════════════════════════════════
-     FRAGILITY LAB PAGE
-════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     FRAGILITY LAB
+═══════════════════════════════════════ -->
 <div id="lab-page" class="page">
-  <!-- Lab header -->
-  <div class="lab-header">
-    <div class="lab-icon">🧪</div>
+  <div class="lab-hdr">
+    <div class="lab-hdr-ico">🧪</div>
     <h1>Fragility Lab</h1>
     <p>Explore how environmental interactions destroy quantum coherence through real-time noise simulation.</p>
   </div>
+  <div class="lab-body">
 
-  <div class="lab-layout">
-
-    <!-- ── LEFT: Noise Channels + Presets + Initial State ── -->
+    <!-- LEFT -->
     <div class="lab-left">
-
-      <div class="panel-title">Noise Channels</div>
-
-      <!-- Depolarizing -->
+      <div class="pnl-title">Noise Channels</div>
       <div class="noise-row">
-        <div class="noise-label"><span>DEPOLARIZING</span><span class="noise-val" id="v-depol">0%</span></div>
+        <div class="noise-lbl"><span>DEPOLARIZING</span><span class="noise-val" id="v-depol">0%</span></div>
         <input type="range" min="0" max="100" value="0" id="s-depol" oninput="updateNoise()">
       </div>
-      <!-- Phase Flip -->
       <div class="noise-row">
-        <div class="noise-label"><span>PHASE FLIP</span><span class="noise-val" id="v-phase">0%</span></div>
+        <div class="noise-lbl"><span>PHASE FLIP</span><span class="noise-val" id="v-phase">0%</span></div>
         <input type="range" min="0" max="100" value="0" id="s-phase" oninput="updateNoise()">
       </div>
-      <!-- Bit Flip -->
       <div class="noise-row">
-        <div class="noise-label"><span>BIT FLIP</span><span class="noise-val" id="v-bit">0%</span></div>
+        <div class="noise-lbl"><span>BIT FLIP</span><span class="noise-val" id="v-bit">0%</span></div>
         <input type="range" min="0" max="100" value="0" id="s-bit" oninput="updateNoise()">
       </div>
-      <!-- Amplitude Damping -->
       <div class="noise-row">
-        <div class="noise-label"><span>AMP. DAMPING (T₁)</span><span class="noise-val" id="v-amp">1%</span></div>
-        <input type="range" min="0" max="100" value="1" id="s-amp" oninput="updateNoise()">
+        <div class="noise-lbl"><span>AMP. DAMPING (T₁)</span><span class="noise-val" id="v-amp">0%</span></div>
+        <input type="range" min="0" max="100" value="0" id="s-amp" oninput="updateNoise()">
       </div>
-      <div class="section-divider"></div>
-
-      <div class="panel-title">Presets</div>
+      <div class="div"></div>
+      <div class="pnl-title">Presets</div>
       <div class="preset-grid">
         <button class="preset-btn" onclick="applyPreset('clean')">CLEAN</button>
         <button class="preset-btn" onclick="applyPreset('noisy')">NOISY</button>
         <button class="preset-btn" onclick="applyPreset('t1only')">T₁ ONLY</button>
-        <button class="preset-btn" onclick="applyPreset('phase')">PHASE</button>
+        <button class="preset-btn" onclick="applyPreset('t2like')">T₂ LIKE</button>
       </div>
-      <button class="btn-orange" onclick="applyPreset('pause')">⏸ PAUSE</button>
-      <button class="btn-ghost" onclick="resetState()">↺ RESET STATE</button>
-
-      <div class="section-divider"></div>
-
-      <div class="panel-title">Initial State</div>
-      <div class="state-btns">
-        <button class="state-btn active" id="sb-0" onclick="setInitState(0)">|0⟩</button>
+      <button class="btn-action btn-pause" id="pause-btn" onclick="togglePause()">⏸ PAUSE</button>
+      <button class="btn-action btn-reset" onclick="resetLab()">↺ RESET STATE</button>
+      <div class="div"></div>
+      <div class="pnl-title">Initial State</div>
+      <div class="state-grid">
+        <button class="state-btn on" id="sb-0" onclick="setInitState(0)">|0⟩</button>
         <button class="state-btn" id="sb-1" onclick="setInitState(1)">|1⟩</button>
         <button class="state-btn" id="sb-plus" onclick="setInitState(2)">|+⟩</button>
         <button class="state-btn" id="sb-minus" onclick="setInitState(3)">|−⟩</button>
       </div>
+    </div>
 
-    </div><!-- /lab-left -->
-
-    <!-- ── CENTER: Bloch Sphere + Graph ── -->
+    <!-- CENTER -->
     <div class="lab-center">
-      <div class="sphere-area">
-        <div class="sphere-topbar">
-          <span class="state-badge badge-coherent" id="coherence-badge">COHERENT STATE</span>
-          <button id="pause-btn" onclick="togglePause()">⏸ Pause</button>
+      <div class="sphere-wrap">
+        <div class="sphere-bar">
+          <span class="badge badge-ok" id="coh-badge">COHERENT STATE</span>
+          <div class="sphere-btns">
+            <button class="mini-btn" onclick="takeSnap()">📷 Photo</button>
+          </div>
         </div>
-        <canvas id="lab-canvas" width="340" height="340"></canvas>
+        <canvas id="lab-canvas" width="390" height="390"></canvas>
+        <div class="sphere-hint">Double-click to save snapshot</div>
       </div>
-
-      <!-- Graph -->
       <div class="graph-area">
         <div class="graph-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div><span style="color:#60a5fa">COHERENCE |R|</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div><span style="color:#f87171">X COMPONENT</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div><span style="color:#4ade80">Y COMPONENT</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div><span style="color:#a78bfa">Z COMPONENT</span></div>
+          <div class="leg on" id="leg-r" onclick="toggleGraphFilter('r',this)"><div class="leg-dot" style="background:#60a5fa"></div><span style="color:#60a5fa">COHERENCE |R|</span></div>
+          <div class="leg" id="leg-x" onclick="toggleGraphFilter('x',this)"><div class="leg-dot" style="background:#f87171"></div><span style="color:#f87171">X</span></div>
+          <div class="leg" id="leg-y" onclick="toggleGraphFilter('y',this)"><div class="leg-dot" style="background:#4ade80"></div><span style="color:#4ade80">Y</span></div>
+          <div class="leg" id="leg-z" onclick="toggleGraphFilter('z',this)"><div class="leg-dot" style="background:#a78bfa"></div><span style="color:#a78bfa">Z</span></div>
         </div>
-        <canvas id="graph-canvas"></canvas>
-        <canvas id="fidelity-bar-canvas"></canvas>
+        <canvas id="graph-canvas" height="110"></canvas>
+        <canvas id="fid-canvas" height="20"></canvas>
       </div>
-    </div><!-- /lab-center -->
+    </div>
 
-    <!-- ── RIGHT: Live Statistics + Snapshots ── -->
+    <!-- RIGHT -->
     <div class="lab-right">
-      <div class="panel-title" style="margin-bottom:18px;">Live Statistics</div>
+      <div class="pnl-title" style="margin-bottom:16px;">Live Statistics</div>
+      <div class="stat-row"><div class="stat-label">COHERENCE |R|</div><div class="stat-num g" id="st-coh">1.000</div></div>
+      <div class="stat-row"><div class="stat-label">PURITY Tr(ρ²)</div><div class="stat-num g" id="st-pur">1.000</div></div>
+      <div class="stat-row"><div class="stat-label">Z-PROBABILITY</div><div class="stat-num w" id="st-z">0.500</div></div>
+      <div class="stat-row" style="border:none;margin-bottom:10px;"><div class="stat-label">FIDELITY</div><div class="stat-num g" id="st-fid">1.000</div></div>
+      <div class="div"></div>
+      <div class="pnl-title">Graph Filters</div>
+      <div class="filter-grid" style="margin-bottom:4px;">
+        <button class="filt-btn on" id="fb-r" onclick="toggleFilter('r',this)">COHERENCE</button>
+        <button class="filt-btn" id="fb-x" onclick="toggleFilter('x',this)">X</button>
+        <button class="filt-btn" id="fb-y" onclick="toggleFilter('y',this)">Y</button>
+        <button class="filt-btn" id="fb-z" onclick="toggleFilter('z',this)">Z</button>
+      </div>
+      <div class="div"></div>
+      <div class="pnl-title">Snapshots</div>
+      <div id="snap-list"><div class="no-snap">No snapshots yet.<br>Double-click sphere or use 📷</div></div>
+      <button class="add-snap-btn" onclick="takeSnap()">+ TAKE SNAPSHOT</button>
+    </div>
 
-      <div class="stat-row">
-        <div>
-          <div class="stat-label">COHERENCE |R|</div>
-        </div>
-        <div class="stat-val green" id="stat-coh">1.000</div>
-      </div>
-      <div class="stat-row">
-        <div><div class="stat-label">PURITY Tr(ρ²)</div></div>
-        <div class="stat-val green" id="stat-pur">1.000</div>
-      </div>
-      <div class="stat-row">
-        <div><div class="stat-label">Z PROBABILITY</div></div>
-        <div class="stat-val yellow" id="stat-z">0.500</div>
-      </div>
-      <div class="stat-row" style="border:none;margin-bottom:6px;">
-        <div><div class="stat-label">FIDELITY</div></div>
-        <div class="stat-val green" id="stat-fid">1.000</div>
-      </div>
-
-      <div class="section-divider"></div>
-      <div class="panel-title">Graph Filters</div>
-      <div class="filter-grid">
-        <button class="filter-btn active" onclick="toggleFilter('coh',this)">MIXED</button>
-        <button class="filter-btn" onclick="toggleFilter('x',this)">X</button>
-        <button class="filter-btn" onclick="toggleFilter('y',this)">Y</button>
-        <button class="filter-btn" onclick="toggleFilter('z',this)">Z</button>
-      </div>
-
-      <div class="section-divider"></div>
-      <div class="panel-title">Snapshots</div>
-      <div id="snapshots-list">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#334155;text-align:center;padding:20px 0;">No snapshots yet.<br>Double-click sphere to capture.</div>
-      </div>
-      <button class="btn-ghost" style="margin-top:6px;" onclick="takeSnapshot()">+ TAKE SNAPSHOT</button>
-
-    </div><!-- /lab-right -->
-  </div><!-- /lab-layout -->
-
-  <div style="border-top:1px solid rgba(255,255,255,.04);padding:10px 20px;display:flex;gap:20px;justify-content:center;">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">REACT</span>
-    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">TYPESCRIPT</span>
-    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">THREE.JS</span>
-    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">TAILWIND</span>
   </div>
-</div><!-- /lab-page -->
+  <div class="lab-footer">
+    <span>REACT</span><span>TYPESCRIPT</span><span>THREE.JS</span><span>TAILWIND</span>
+  </div>
+</div>
 
 
-<!-- ════════════════════════════════════════
-     JAVASCRIPT
-════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     Q vs C PAGE
+═══════════════════════════════════════ -->
+<div id="qvc-page" class="page">
+  <div class="qvc-hdr">
+    <h1>⚖️ Quantum vs Classical</h1>
+    <p>See the fundamental difference: classical bits remain stable under noise while quantum qubits lose coherence and collapse to a mixed state.</p>
+  </div>
+
+  <div class="qvc-controls">
+    <span class="qvc-ctrl-label">NOISE LEVEL</span>
+    <input type="range" min="0" max="100" value="0" id="qvc-slider" oninput="qvcSetNoise(this.value)" style="width:200px;">
+    <span class="qvc-noise-val" id="qvc-noise-disp">0%</span>
+    <div style="display:flex;gap:8px;margin-left:auto;">
+      <button class="circuit-btn run" onclick="qvcApplyPreset(0)" style="font-size:8px;">NO NOISE</button>
+      <button class="circuit-btn run" onclick="qvcApplyPreset(30)" style="font-size:8px;background:#eab308;border-color:#eab308;">LOW NOISE</button>
+      <button class="circuit-btn run" onclick="qvcApplyPreset(70)" style="font-size:8px;background:#f97316;border-color:#f97316;">HIGH NOISE</button>
+      <button class="circuit-btn run" onclick="qvcApplyPreset(100)" style="font-size:8px;background:#ef4444;border-color:#ef4444;">MAX NOISE</button>
+    </div>
+  </div>
+
+  <div class="qvc-main">
+    <!-- Classical -->
+    <div class="qvc-card">
+      <div class="qvc-card-hdr">
+        <h3 style="color:#22c55e;">🟢 Classical Bit</h3>
+        <span class="qvc-stat-pill" id="qvc-c-badge" style="background:rgba(34,197,94,.1);color:#22c55e;">STABLE</span>
+      </div>
+      <canvas id="qvc-c-canvas" class="qvc-graph" height="200"></canvas>
+      <div class="qvc-stats">
+        <div class="qvc-stat"><div class="qvc-stat-label">CURRENT STATE</div><div class="qvc-stat-val" id="qvc-c-state" style="color:#22c55e;">|0⟩</div></div>
+        <div class="qvc-stat"><div class="qvc-stat-label">BIT FLIPS</div><div class="qvc-stat-val" id="qvc-c-flips" style="color:#22c55e;">0</div></div>
+        <div class="qvc-stat"><div class="qvc-stat-label">STABILITY</div><div class="qvc-stat-val" id="qvc-c-stab" style="color:#22c55e;">100%</div></div>
+        <div class="qvc-stat"><div class="qvc-stat-label">ERROR RATE</div><div class="qvc-stat-val" id="qvc-c-err" style="color:#22c55e;">0.0%</div></div>
+      </div>
+    </div>
+    <!-- Quantum -->
+    <div class="qvc-card">
+      <div class="qvc-card-hdr">
+        <h3 style="color:#60a5fa;">🔵 Qubit (Quantum)</h3>
+        <span class="qvc-stat-pill" id="qvc-q-badge" style="background:rgba(96,165,250,.1);color:#60a5fa;">COHERENT</span>
+      </div>
+      <canvas id="qvc-q-canvas" class="qvc-graph" height="200"></canvas>
+      <div class="qvc-stats">
+        <div class="qvc-stat"><div class="qvc-stat-label">COHERENCE |R|</div><div class="qvc-stat-val" id="qvc-q-coh" style="color:#60a5fa;">1.000</div></div>
+        <div class="qvc-stat"><div class="qvc-stat-label">FIDELITY</div><div class="qvc-stat-val" id="qvc-q-fid" style="color:#60a5fa;">1.000</div></div>
+        <div class="qvc-stat"><div class="qvc-stat-label">PURITY</div><div class="qvc-stat-val" id="qvc-q-pur" style="color:#60a5fa;">1.000</div></div>
+        <div class="qvc-stat"><div class="qvc-stat-label">STATE</div><div class="qvc-stat-val" id="qvc-q-state" style="color:#60a5fa;">PURE</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bloch sphere comparison -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+    <div class="qvc-card" style="display:flex;flex-direction:column;align-items:center;">
+      <h4 style="font-size:12px;font-weight:700;color:#22c55e;margin-bottom:12px;align-self:flex-start;">Classical Bit — Phase Space</h4>
+      <canvas id="qvc-c-bloch" width="260" height="260" style="border-radius:50%;border:1px solid rgba(34,197,94,.2);box-shadow:0 0 40px rgba(34,197,94,.1);"></canvas>
+      <p style="margin-top:10px;font-size:11px;color:#334155;text-align:center;max-width:220px;">Classical bit remains at one of two discrete points — unaffected by noise (uses error correction naturally)</p>
+    </div>
+    <div class="qvc-card" style="display:flex;flex-direction:column;align-items:center;">
+      <h4 style="font-size:12px;font-weight:700;color:#60a5fa;margin-bottom:12px;align-self:flex-start;">Qubit — Bloch Sphere</h4>
+      <canvas id="qvc-q-bloch" width="260" height="260" style="border-radius:50%;border:1px solid rgba(59,130,246,.2);box-shadow:0 0 40px rgba(37,99,235,.15);"></canvas>
+      <p style="margin-top:10px;font-size:11px;color:#334155;text-align:center;max-width:220px;">Qubit Bloch vector shrinks toward center as noise increases — superposition is destroyed</p>
+    </div>
+  </div>
+
+  <div class="qvc-diff">
+    <h3>Key Differences Under Noise</h3>
+    <div class="diff-grid">
+      <div class="diff-item" style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.12);">
+        <h4 style="color:#22c55e;">🟢 Classical Bit</h4>
+        <p>A classical bit is either 0 or 1. Even with noise, error correction only needs to detect a flip. The state space is <strong style="color:#94a3b8">discrete</strong> — only two possible values. Thermal noise must overcome an energy barrier to flip the bit.</p>
+      </div>
+      <div class="diff-item" style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.12);">
+        <h4 style="color:#60a5fa;">🔵 Quantum Qubit</h4>
+        <p>A qubit lives in a continuous <strong style="color:#94a3b8">superposition</strong> on the Bloch sphere surface. Any environmental interaction causes decoherence — the Bloch vector shrinks toward the origin, destroying quantum information irreversibly without active correction.</p>
+      </div>
+      <div class="diff-item" style="background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.12);">
+        <h4 style="color:#fb923c;">⚡ Error Types</h4>
+        <p>Classical: only <strong style="color:#94a3b8">bit-flip</strong> errors. Quantum: <strong style="color:#94a3b8">bit-flip AND phase-flip</strong> independently — both X and Z errors — requiring 2D error correction codes (Shor, Steane, Surface codes).</p>
+      </div>
+      <div class="diff-item" style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.12);">
+        <h4 style="color:#a78bfa;">🔮 Decoherence Time</h4>
+        <p>Classical bits are stable for years. Superconducting qubits decohere in <strong style="color:#94a3b8">microseconds (T₂ ~ 100μs)</strong>. This is why quantum computing requires ultra-low temperatures and active error correction every ~μs.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="gate-page" class="page">
+<div class="gb-layout">
+
+  <!-- ── PALETTE ── -->
+  <div class="gb-palette">
+    <div class="gb-palette-title">Gate Palette</div>
+
+    <div class="gb-gate-item" draggable="true" ondragstart="gbDragStart(event,'H')" style="border-color:rgba(59,130,246,.3);">
+      <div class="gb-gate-sym" style="background:rgba(59,130,246,.2);color:#60a5fa;">H</div>
+      <div class="gb-gate-info"><div class="gb-gate-nm" style="color:#60a5fa;">Hadamard</div><div class="gb-gate-desc">|0⟩ → |+⟩</div></div>
+    </div>
+    <div class="gb-gate-item" draggable="true" ondragstart="gbDragStart(event,'X')" style="border-color:rgba(239,68,68,.3);">
+      <div class="gb-gate-sym" style="background:rgba(239,68,68,.2);color:#f87171;">X</div>
+      <div class="gb-gate-info"><div class="gb-gate-nm" style="color:#f87171;">Pauli-X</div><div class="gb-gate-desc">NOT / bit flip</div></div>
+    </div>
+    <div class="gb-gate-item" draggable="true" ondragstart="gbDragStart(event,'Y')" style="border-color:rgba(74,222,128,.3);">
+      <div class="gb-gate-sym" style="background:rgba(74,222,128,.2);color:#4ade80;">Y</div>
+      <div class="gb-gate-info"><div class="gb-gate-nm" style="color:#4ade80;">Pauli-Y</div><div class="gb-gate-desc">X + phase flip</div></div>
+    </div>
+    <div class="gb-gate-item" draggable="true" ondragstart="gbDragStart(event,'Z')" style="border-color:rgba(167,139,250,.3);">
+      <div class="gb-gate-sym" style="background:rgba(167,139,250,.2);color:#a78bfa;">Z</div>
+      <div class="gb-gate-info"><div class="gb-gate-nm" style="color:#a78bfa;">Pauli-Z</div><div class="gb-gate-desc">Phase flip</div></div>
+    </div>
+    <div class="gb-gate-item" draggable="true" ondragstart="gbDragStart(event,'CNOT')" style="border-color:rgba(251,191,36,.3);">
+      <div class="gb-gate-sym" style="background:rgba(251,191,36,.15);color:#fbbf24;font-size:10px;font-weight:900;">CX</div>
+      <div class="gb-gate-info"><div class="gb-gate-nm" style="color:#fbbf24;">CNOT</div><div class="gb-gate-desc">q₀ ctrl → q₁</div></div>
+    </div>
+
+    <div class="gb-tip">
+      <b>How to use:</b><br>
+      1. Drag a gate to the<br>
+      &nbsp;&nbsp;&nbsp;q₀ or q₁ wire<br>
+      2. CNOT goes on q₀<br>
+      &nbsp;&nbsp;&nbsp;(controls q₁)<br>
+      3. Press ▶ RUN<br>
+      4. Click × to remove<br>
+    </div>
+  </div>
+
+  <!-- ── CIRCUIT ── -->
+  <div class="gb-circuit">
+    <div class="gb-circuit-hdr">
+      <h2>⚛ Circuit Composer</h2>
+      <div class="gb-circuit-btns">
+        <button class="gb-btn-run" onclick="gbRun()">▶ RUN</button>
+        <button class="gb-btn-clear" onclick="gbClear()">✕ CLEAR</button>
+      </div>
+    </div>
+
+    <!-- q₀ wire -->
+    <div class="gb-wire-row">
+      <div class="gb-wire-label">
+        <span class="gb-wire-qlabel">q₀</span>
+        <span class="gb-wire-init">starts in |0⟩</span>
+      </div>
+      <div class="gb-wire-track">
+        <div class="gb-wire-line"></div>
+        <div class="gb-drop-zone" id="gb-drop-q0"
+          ondragover="gbDragOver(event)" ondragleave="gbDragLeave(event)" ondrop="gbDrop(event,0)">
+          <span class="gb-drop-hint" id="gb-hint-q0">← drag gates here</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- q₁ wire -->
+    <div class="gb-wire-row">
+      <div class="gb-wire-label">
+        <span class="gb-wire-qlabel">q₁</span>
+        <span class="gb-wire-init">starts in |0⟩ — CNOT target</span>
+      </div>
+      <div class="gb-wire-track">
+        <div class="gb-wire-line"></div>
+        <div class="gb-drop-zone" id="gb-drop-q1"
+          ondragover="gbDragOver(event)" ondragleave="gbDragLeave(event)" ondrop="gbDrop(event,1)">
+          <span class="gb-drop-hint" id="gb-hint-q1">← drag gates here (not CNOT)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Measurement output -->
+    <div class="gb-measure">
+      <div class="gb-measure-label">Measure</div>
+      <div class="gb-measure-val" id="gb-measure">Press ▶ RUN to simulate and see outcome</div>
+    </div>
+
+    <!-- Step-by-step log -->
+    <div class="gb-step-log" id="gb-step-log" style="display:none;">
+      <div class="gb-step-log-hdr">Step-by-Step State Evolution</div>
+      <div id="gb-step-rows"></div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="gb-right">
+    <div class="gb-right-title">State Visualizer</div>
+    <canvas id="gate-canvas" width="260" height="260"></canvas>
+
+    <div class="gb-readout">
+      <div>θ = <span class="v" id="gb-theta">0.0°</span></div>
+      <div>φ = <span class="v" id="gb-phi">0.0°</span></div>
+      <div>|ψ₀⟩ = <span class="v" id="gb-state-name">|0⟩</span></div>
+      <div>|ψ₁⟩ = <span class="v2" id="gb-q1-state">|0⟩</span></div>
+    </div>
+
+    <div class="gb-state-badge" id="gb-badge">|00⟩</div>
+    <div class="gb-entangle" id="gb-entangle">⚡ ENTANGLED STATE</div>
+
+    <!-- Probability bars -->
+    <div class="gb-prob-section">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#1e293b;text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px;">Measurement Probabilities</div>
+      <div class="gb-prob-bar-row">
+        <div class="gb-prob-bar-label"><span class="ket">|00⟩</span><span class="pct" id="p00">100.0%</span></div>
+        <div class="gb-prob-track"><div class="gb-prob-fill" id="bar00" style="width:100%;background:#3b82f6;"></div></div>
+      </div>
+      <div class="gb-prob-bar-row">
+        <div class="gb-prob-bar-label"><span class="ket">|01⟩</span><span class="pct" id="p01">0.0%</span></div>
+        <div class="gb-prob-track"><div class="gb-prob-fill" id="bar01" style="width:0%;background:#ef4444;"></div></div>
+      </div>
+      <div class="gb-prob-bar-row">
+        <div class="gb-prob-bar-label"><span class="ket">|10⟩</span><span class="pct" id="p10">0.0%</span></div>
+        <div class="gb-prob-track"><div class="gb-prob-fill" id="bar10" style="width:0%;background:#22c55e;"></div></div>
+      </div>
+      <div class="gb-prob-bar-row">
+        <div class="gb-prob-bar-label"><span class="ket">|11⟩</span><span class="pct" id="p11">0.0%</span></div>
+        <div class="gb-prob-track"><div class="gb-prob-fill" id="bar11" style="width:0%;background:#a78bfa;"></div></div>
+      </div>
+    </div>
+
+    <!-- Matrix display -->
+    <div class="gb-matrix" id="gb-matrix-box">
+      <div class="gb-matrix-title">Last Gate Matrix</div>
+      <div class="gb-matrix-body" id="gb-matrix-content">No gate applied yet</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT — COMPLETE IMPLEMENTATION
+═══════════════════════════════════════ -->
+
 <script>
-/* ── Page routing ── */
+'use strict';
+'use strict';
+
+/* ════════════════════════════════
+   PAGE ROUTING
+════════════════════════════════ */
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(name === 'lab' ? 'lab-page' : 'home-page').classList.add('active');
-  if (name === 'lab') { setTimeout(initLabCanvas, 60); }
+  const ids = { home:'home-page', lab:'lab-page', qvc:'qvc-page', gate:'gate-page' };
+  const el = document.getElementById(ids[name]);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (name === 'home') document.getElementById('nl-home').classList.add('active');
+  if (name === 'lab' || name === 'qvc' || name === 'gate') document.getElementById('nl-labs').classList.add('active');
+  if (name === 'lab' && !labInited) setTimeout(initLab, 60);
+  if (name === 'qvc' && !qvcInited) setTimeout(initQvC, 60);
+  if (name === 'gate' && !gateInited) setTimeout(initGate, 60);
 }
 
-/* ══════════════════════════════════════════
-   HOME BLOCH SPHERE (pure canvas, elegant)
-══════════════════════════════════════════ */
-(function(){
-  const canvas = document.getElementById('bloch-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W=420,H=420,cx=210,cy=210,R=165;
-  let rotX=0.30,rotY=0,dragging=false,lastMX=0,lastMY=0;
-
-  canvas.addEventListener('mousedown',e=>{dragging=true;lastMX=e.clientX;lastMY=e.clientY;});
-  window.addEventListener('mouseup',()=>dragging=false);
-  window.addEventListener('mousemove',e=>{
-    if(!dragging)return;
-    rotY+=(e.clientX-lastMX)*.012; rotX+=(e.clientY-lastMY)*.012;
-    rotX=Math.max(-1.4,Math.min(1.4,rotX)); lastMX=e.clientX;lastMY=e.clientY;
-  });
-
-  function proj(x,y,z){
-    const cosX=Math.cos(rotX),sinX=Math.sin(rotX);
-    const y1=y*cosX-z*sinX, z1=y*sinX+z*cosX;
-    const cosY=Math.cos(rotY),sinY=Math.sin(rotY);
-    const x2=x*cosY+z1*sinY, z2=-x*sinY+z1*cosY;
-    const d=900,s=d/(d+z2+R);
-    return{sx:cx+x2*s,sy:cy-y1*s,depth:z2};
+/* ════════════════════════════════
+   CORE 3D BLOCH SPHERE RENDERER
+   (Shared across all pages)
+════════════════════════════════ */
+class BlochRenderer {
+  constructor(canvas, radius, opts = {}) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.R = radius;
+    this.cx = canvas.width / 2;
+    this.cy = canvas.height / 2;
+    this.rX = opts.rX ?? 0.30;
+    this.rY = opts.rY ?? 0;
+    this.drag = false;
+    this.autoRotate = opts.autoRotate ?? true;
+    this.autoSpeed = opts.autoSpeed ?? 0.005;
+    this._initDrag();
   }
 
-  function circle3D(nx,ny,nz,r,col,alpha,lw){
-    let ax,ay,az;
-    if(Math.abs(nx)<.9){ax=0;ay=-nz;az=ny;}else{ax=-ny;ay=nx;az=0;}
-    const la=Math.hypot(ax,ay,az);ax/=la;ay/=la;az/=la;
-    const bx=ny*az-nz*ay,by=nz*ax-nx*az,bz=nx*ay-ny*ax;
-    const N=100;
-    ctx.save();ctx.beginPath();
-    for(let i=0;i<=N;i++){const a=(i/N)*Math.PI*2,c=Math.cos(a)*r,s=Math.sin(a)*r;const p=proj(c*ax+s*bx,c*ay+s*by,c*az+s*bz);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
-    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
-  }
-
-  function latRing(yOff,col,alpha,lw){
-    const r=Math.sqrt(Math.max(0,R*R-yOff*yOff));if(r<1)return;
-    ctx.save();ctx.beginPath();
-    for(let i=0;i<=100;i++){const a=(i/100)*Math.PI*2;const p=proj(Math.cos(a)*r,yOff,Math.sin(a)*r);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
-    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
-  }
-
-  function line3D(x1,y1,z1,x2,y2,z2,col,alpha,lw,dashed){
-    const a=proj(x1,y1,z1),b=proj(x2,y2,z2);
-    ctx.save();ctx.beginPath();if(dashed)ctx.setLineDash([4,6]);
-    ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);
-    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
-  }
-
-  function dot3D(x,y,z,r,col,alpha){
-    const p=proj(x,y,z);ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(p.sx,p.sy,r,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.restore();
-  }
-
-  function label3D(x,y,z,text,col,alpha){
-    const p=proj(x,y,z);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=col;ctx.font='bold 11px JetBrains Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=col;ctx.shadowBlur=8;ctx.fillText(text,p.sx,p.sy);ctx.restore();
-  }
-
-  function drawArrow(tipX,tipY,tipZ,t,radius){
-    const O=proj(0,0,0),T=proj(tipX,tipY,tipZ);
-    const dx=T.sx-O.sx,dy=T.sy-O.sy,len=Math.hypot(dx,dy);if(len<1)return;
-    const ux=dx/len,uy=dy/len;
-    [[20,.03,20],[10,.07,10],[4,.18,4],[2,.55,0],[1.2,.9,0]].forEach(([lw,a,bl])=>{
-      ctx.save();ctx.shadowBlur=bl;ctx.shadowColor='#3b82f6';ctx.strokeStyle='#60a5fa';ctx.lineWidth=lw;ctx.globalAlpha=a;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(O.sx,O.sy);ctx.lineTo(T.sx-ux*12,T.sy-uy*12);ctx.stroke();ctx.restore();
+  _initDrag() {
+    const c = this.canvas;
+    c.addEventListener('mousedown', e => { this.drag = true; this._lx = e.clientX; this._ly = e.clientY; });
+    window.addEventListener('mouseup', () => { this.drag = false; });
+    window.addEventListener('mousemove', e => {
+      if (!this.drag) return;
+      this.rY += (e.clientX - this._lx) * 0.013;
+      this.rX += (e.clientY - this._ly) * 0.013;
+      this.rX = Math.max(-1.5, Math.min(1.5, this.rX));
+      this._lx = e.clientX; this._ly = e.clientY;
     });
-    const ang=Math.atan2(dy,dx),hL=16,hA=.40;
-    ctx.save();ctx.shadowBlur=16;ctx.shadowColor='#93c5fd';ctx.fillStyle='#93c5fd';ctx.globalAlpha=.95;
-    ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(T.sx-hL*Math.cos(ang-hA),T.sy-hL*Math.sin(ang-hA));ctx.lineTo(T.sx-hL*Math.cos(ang+hA),T.sy-hL*Math.sin(ang+hA));ctx.closePath();ctx.fill();ctx.restore();
-    const pulse=6+Math.sin(t*4)*2.5;
-    const grd=ctx.createRadialGradient(T.sx,T.sy,0,T.sx,T.sy,pulse*2.8);
-    grd.addColorStop(0,'rgba(219,234,254,.98)');grd.addColorStop(.3,'rgba(147,197,253,.75)');grd.addColorStop(.7,'rgba(59,130,246,.30)');grd.addColorStop(1,'rgba(37,99,235,0)');
-    ctx.save();ctx.shadowBlur=24;ctx.shadowColor='#60a5fa';ctx.globalAlpha=1;ctx.beginPath();ctx.arc(T.sx,T.sy,pulse*2.8,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();ctx.restore();
-    const E=proj(tipX,0,tipZ);
-    ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='#3b82f6';ctx.globalAlpha=.18;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(E.sx,E.sy);ctx.stroke();ctx.restore();
-    dot3D(tipX,0,tipZ,3,'#3b82f6',.35);
+    // Touch support
+    c.addEventListener('touchstart', e => { e.preventDefault(); this.drag = true; this._lx = e.touches[0].clientX; this._ly = e.touches[0].clientY; }, {passive:false});
+    c.addEventListener('touchend', () => this.drag = false);
+    c.addEventListener('touchmove', e => {
+      if (!this.drag) return;
+      this.rY += (e.touches[0].clientX - this._lx) * 0.013;
+      this.rX += (e.touches[0].clientY - this._ly) * 0.013;
+      this.rX = Math.max(-1.5, Math.min(1.5, this.rX));
+      this._lx = e.touches[0].clientX; this._ly = e.touches[0].clientY;
+    });
   }
 
-  let t0=null,theta=Math.PI/4,phi=0;
-  function draw(ts){
-    if(!t0)t0=ts;const t=(ts-t0)/1000;
-    ctx.clearRect(0,0,W,H);
-    if(!dragging)rotY+=.006;
-    phi=t*.55; theta=Math.PI/4+Math.sin(t*.38)*.42;
-    const tipX=R*Math.sin(theta)*Math.cos(phi),tipY=R*Math.cos(theta),tipZ=R*Math.sin(theta)*Math.sin(phi);
-
-    // Sphere shell
-    ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
-    const bg=ctx.createRadialGradient(cx-R*.28,cy-R*.28,R*.05,cx,cy,R*1.1);
-    bg.addColorStop(0,'rgba(30,58,120,.18)');bg.addColorStop(.5,'rgba(10,10,20,.10)');bg.addColorStop(1,'rgba(0,0,0,.28)');
-    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    const hl=ctx.createRadialGradient(cx-R*.40,cy-R*.38,0,cx-R*.25,cy-R*.25,R*.55);
-    hl.addColorStop(0,'rgba(96,165,250,.09)');hl.addColorStop(.5,'rgba(37,99,235,.04)');hl.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=hl;ctx.fillRect(0,0,W,H);ctx.restore();
-
-    for(let i=0;i<8;i++){const a=(i/8)*Math.PI;circle3D(Math.sin(a),0,Math.cos(a),R,'#1e3a5f',.28,.7);}
-    [.25,.5,.75].forEach(f=>{const y=R*(1-2*f);latRing(y,f===.5?'#1e40af':'#1e3a5f',f===.5?.52:.22,f===.5?1.2:.7);});
-
-    const L=R*1.22;
-    line3D(0,L,0,0,-L,0,'#475569',.45,1);
-    line3D(-L,0,0,L,0,0,'#2d3d50',.35,.8);
-    line3D(0,0,-L,0,0,L,'#2d3d50',.28,.8,true);
-    dot3D(0,R,0,4,'#60a5fa',.85);dot3D(0,-R,0,4,'#60a5fa',.85);
-    label3D(0,R*1.14,0,'|0⟩','#60a5fa',.65);label3D(0,-R*1.14,0,'|1⟩','#60a5fa',.65);
-    label3D(R*1.13,0,0,'|+⟩','#334d66',.45);label3D(-R*1.13,0,0,'|−⟩','#334d66',.45);
-    dot3D(0,0,0,2.5,'#475569',.55);
-    drawArrow(tipX,tipY,tipZ,t,R);
-
-    document.getElementById('h-theta').textContent=(theta*180/Math.PI).toFixed(1)+'°';
-    document.getElementById('h-phi').textContent=(((phi*180/Math.PI)%360+360)%360).toFixed(1)+'°';
-    requestAnimationFrame(draw);
+  proj(x, y, z) {
+    const cx = Math.cos(this.rX), sx = Math.sin(this.rX);
+    const y1 = y * cx - z * sx, z1 = y * sx + z * cx;
+    const cy = Math.cos(this.rY), sy = Math.sin(this.rY);
+    const x2 = x * cy + z1 * sy, z2 = -x * sy + z1 * cy;
+    const fov = 900;
+    const s = fov / (fov + z2 + this.R);
+    return { sx: this.cx + x2 * s, sy: this.cy - y1 * s, depth: z2 };
   }
-  requestAnimationFrame(draw);
+
+  circle3D(nx, ny, nz, r, col, alpha, lw = 1, N = 80) {
+    const ctx = this.ctx;
+    let ax, ay, az;
+    if (Math.abs(nx) < .9) { ax=0; ay=-nz; az=ny; } else { ax=-ny; ay=nx; az=0; }
+    const la = Math.hypot(ax, ay, az); ax/=la; ay/=la; az/=la;
+    const bx=ny*az-nz*ay, by=nz*ax-nx*az, bz=nx*ay-ny*ax;
+    ctx.save(); ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const a = (i/N)*Math.PI*2, c = Math.cos(a)*r, s = Math.sin(a)*r;
+      const p = this.proj(c*ax+s*bx, c*ay+s*by, c*az+s*bz);
+      i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.strokeStyle=col; ctx.globalAlpha=alpha; ctx.lineWidth=lw; ctx.stroke(); ctx.restore();
+  }
+
+  latRing(yOff, col, alpha, lw = 1, N = 80) {
+    const r = Math.sqrt(Math.max(0, this.R*this.R - yOff*yOff));
+    if (r < 1) return;
+    const ctx = this.ctx;
+    ctx.save(); ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const a = (i/N)*Math.PI*2;
+      const p = this.proj(Math.cos(a)*r, yOff, Math.sin(a)*r);
+      i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.strokeStyle=col; ctx.globalAlpha=alpha; ctx.lineWidth=lw; ctx.stroke(); ctx.restore();
+  }
+
+  line3D(x1,y1,z1,x2,y2,z2, col, alpha, lw=1, dashed=false) {
+    const ctx = this.ctx;
+    const a = this.proj(x1,y1,z1), b = this.proj(x2,y2,z2);
+    ctx.save(); if (dashed) ctx.setLineDash([4,6]);
+    ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy);
+    ctx.strokeStyle=col; ctx.globalAlpha=alpha; ctx.lineWidth=lw; ctx.stroke(); ctx.restore();
+  }
+
+  dot3D(x,y,z, r, col, alpha) {
+    const ctx = this.ctx;
+    const p = this.proj(x,y,z);
+    ctx.save(); ctx.globalAlpha=alpha; ctx.beginPath(); ctx.arc(p.sx,p.sy,r,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.fill(); ctx.restore();
+  }
+
+  text3D(x,y,z, txt, col, alpha, size=10) {
+    const ctx = this.ctx;
+    const p = this.proj(x,y,z);
+    ctx.save(); ctx.globalAlpha=alpha; ctx.fillStyle=col;
+    ctx.font=`700 ${size}px "JetBrains Mono",monospace`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(txt, p.sx, p.sy); ctx.restore();
+  }
+
+  drawShell() {
+    const ctx = this.ctx, {cx,cy,R} = this;
+    const W=this.canvas.width, H=this.canvas.height;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+    // radial gradient background
+    const bg = ctx.createRadialGradient(cx-R*.3,cy-R*.3,R*.04, cx,cy,R*1.1);
+    bg.addColorStop(0,'rgba(15,40,100,.35)');
+    bg.addColorStop(.45,'rgba(10,12,25,.20)');
+    bg.addColorStop(1,'rgba(0,0,0,.45)');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    // specular highlight
+    const hl = ctx.createRadialGradient(cx-R*.40,cy-R*.38,0, cx-R*.24,cy-R*.22,R*.55);
+    hl.addColorStop(0,'rgba(120,180,255,.13)');
+    hl.addColorStop(.55,'rgba(40,100,200,.05)');
+    hl.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=hl; ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  drawGrid() {
+    const R = this.R;
+    // 8 meridians
+    for (let i=0; i<8; i++) {
+      const a = (i/8)*Math.PI;
+      this.circle3D(Math.sin(a), 0, Math.cos(a), R, '#1e3a6a', .32, .8);
+    }
+    // equator — brighter
+    this.circle3D(0, 1, 0, R, '#1e40af', .60, 1.3);
+    // lat rings
+    [.5, -.5].forEach(f => this.latRing(R*f, '#1e3a5f', .20, .7));
+    [.85, -.85].forEach(f => this.latRing(R*f, '#1e3a5f', .13, .5));
+  }
+
+  drawAxes(labelScale=1) {
+    const R = this.R, L = R*1.22;
+    const s = labelScale;
+    // Z (vertical)
+    this.line3D(0,L,0, 0,-L,0, '#4a6080',.55,1.2);
+    // X (horizontal right)
+    this.line3D(-L,0,0, L,0,0, '#2d3d50',.38,1);
+    // Y (depth)
+    this.line3D(0,0,-L, 0,0,L, '#2d3d50',.25,1, true);
+    // Poles
+    this.dot3D(0,R,0, 4.5,'#60a5fa',.90);
+    this.dot3D(0,-R,0, 4.5,'#60a5fa',.90);
+    // Labels — render slightly outside sphere
+    this.text3D(0, R*1.14, 0, '|0⟩', '#60a5fa', .75, 10*s);
+    this.text3D(0, -R*1.14, 0, '|1⟩', '#60a5fa', .75, 10*s);
+    this.text3D(R*1.16, 0, 0, '+X', '#38587a', .45, 9*s);
+    this.text3D(-R*1.16, 0, 0, '−X', '#38587a', .45, 9*s);
+    this.text3D(0, 0, R*1.16, '+Y', '#38587a', .38, 9*s);
+    this.text3D(0, 0, -R*1.16, '−Y', '#38587a', .30, 9*s);
+    // Origin dot
+    this.dot3D(0,0,0, 3,'#475569',.60);
+  }
+
+  // Draw Bloch vector (bx,by,bz in unit sphere coords; scaled by R)
+  drawVector(bx, by, bz, t=0, col='#e2e8f0', glow='#ffffff') {
+    const ctx = this.ctx, R = this.R;
+    // Map: render +Z = up = |0⟩ = (bz in logical) → y in render
+    // bx = logical X (equatorial, phi=0), bz = logical Z (|0>)
+    const tipX = R * bx;
+    const tipY = R * bz; // Z is vertical in render
+    const tipZ = R * by; // Y is depth
+
+    const O = this.proj(0,0,0), T = this.proj(tipX,tipY,tipZ);
+    const dx = T.sx-O.sx, dy = T.sy-O.sy, len = Math.hypot(dx,dy);
+    if (len < 1) {
+      // Draw tiny dot at center
+      ctx.save(); ctx.globalAlpha=.6; ctx.beginPath(); ctx.arc(O.sx,O.sy,6,0,Math.PI*2);
+      ctx.fillStyle='rgba(239,68,68,.5)'; ctx.fill(); ctx.restore();
+      return;
+    }
+    const ux=dx/len, uy=dy/len;
+    const shaftEnd = { sx: T.sx - ux*12, sy: T.sy - uy*12 };
+
+    // Layered glow shaft
+    [[18,.02,18],[10,.06,10],[4,.18,4],[2.2,.60,0],[1.2,.96,0]].forEach(([lw,a,bl]) => {
+      ctx.save(); ctx.shadowBlur=bl; ctx.shadowColor=glow;
+      ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.globalAlpha=a; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(O.sx,O.sy); ctx.lineTo(shaftEnd.sx,shaftEnd.sy); ctx.stroke(); ctx.restore();
+    });
+    // Arrowhead
+    const ang = Math.atan2(dy,dx), hL=14, hA=.42;
+    ctx.save(); ctx.shadowBlur=14; ctx.shadowColor=glow; ctx.fillStyle=col; ctx.globalAlpha=.96;
+    ctx.beginPath(); ctx.moveTo(T.sx,T.sy);
+    ctx.lineTo(T.sx-hL*Math.cos(ang-hA), T.sy-hL*Math.sin(ang-hA));
+    ctx.lineTo(T.sx-hL*Math.cos(ang+hA), T.sy-hL*Math.sin(ang+hA));
+    ctx.closePath(); ctx.fill(); ctx.restore();
+    // Tip glow pulse
+    const pulse = 4 + Math.sin(t*5)*1.8;
+    const g = ctx.createRadialGradient(T.sx,T.sy,0, T.sx,T.sy, pulse*3.2);
+    g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(.4,'rgba(200,230,255,.50)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.save(); ctx.shadowBlur=22; ctx.shadowColor=glow;
+    ctx.beginPath(); ctx.arc(T.sx,T.sy,pulse*3.2,0,Math.PI*2); ctx.fillStyle=g; ctx.fill(); ctx.restore();
+    // Projection line to equatorial plane
+    const E = this.proj(tipX, 0, tipZ);
+    ctx.save(); ctx.setLineDash([4,7]); ctx.strokeStyle='#60a5fa'; ctx.globalAlpha=.22; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(T.sx,T.sy); ctx.lineTo(E.sx,E.sy); ctx.stroke(); ctx.restore();
+    // Shadow dot on equatorial plane
+    this.dot3D(tipX,0,tipZ, 3.5,'#60a5fa',.30);
+    // Draw coherence indicator ring if degraded
+    const r = Math.hypot(bx,by,bz);
+    if (r < 0.97) {
+      this.dot3D(0,0,0, 3,'rgba(239,68,68,1)',.50);
+    }
+  }
+
+  tick() {
+    if (!this.drag && this.autoRotate) this.rY += this.autoSpeed;
+  }
+
+  clear() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  render(bx, by, bz, t=0, col='#e2e8f0', glow='#ffffff') {
+    this.clear();
+    this.tick();
+    this.drawShell();
+    this.drawGrid();
+    this.drawAxes();
+    this.drawVector(bx, by, bz, t, col, glow);
+  }
+}
+
+
+/* ════════════════════════════════
+   HOME SPHERE
+════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('home-canvas');
+  if (!canvas) return;
+  const R = new BlochRenderer(canvas, 165, { autoSpeed: 0.006 });
+  let t0 = null;
+  function frame(ts) {
+    if (!t0) t0 = ts;
+    const t = (ts - t0) / 1000;
+    const theta = Math.PI/4 + Math.sin(t*.38)*.42;
+    const phi = t * .55;
+    const bx = Math.sin(theta)*Math.cos(phi);
+    const by = Math.sin(theta)*Math.sin(phi);
+    const bz = Math.cos(theta);
+    R.render(bx, by, bz, t, '#93c5fd', '#3b82f6');
+    document.getElementById('h-theta').textContent = (theta*180/Math.PI).toFixed(1)+'°';
+    document.getElementById('h-phi').textContent = (((phi*180/Math.PI)%360+360)%360).toFixed(1)+'°';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 })();
 
-/* ══════════════════════════════════════════
-   LAB PAGE — Bloch sphere + noise + graph
-══════════════════════════════════════════ */
+
+/* ════════════════════════════════
+   FRAGILITY LAB
+════════════════════════════════ */
 let labInited = false;
-let labRotX=0.30, labRotY=0;
-let labDragging=false, labLMX=0, labLMY=0;
-let labPaused=false;
-let labT0=null, labT=0;
-let labTheta=Math.PI/4, labPhi=0;
-
-// Noise params [0..1]
-let noise = { depol:0, phase:0, bit:0, amp:.01 };
-let blochR = 1.0; // coherence radius (shrinks with noise)
-let graphHistory = []; // {r, x, y, z}
-const HIST_LEN = 200;
-
-let graphFilters = { coh:true, x:false, y:false, z:false };
-let activeInitState = 0; // 0=|0>, 1=|1>, 2=|+>, 3=|->
-let snapshots = [];
+let labPaused = false;
+let labT0 = null, labT = 0;
+let activeState = 0;
+let labNoise = { depol:0, phase:0, bit:0, amp:0 };
+let labBlochR = 1;
+let labGraphHist = [];
+const GHIST = 250;
+let labFilters = { r:true, x:false, y:false, z:false };
+let snapList = [];
+let labRenderer = null;
 
 function updateNoise() {
-  noise.depol  = parseInt(document.getElementById('s-depol').value)/100;
-  noise.phase  = parseInt(document.getElementById('s-phase').value)/100;
-  noise.bit    = parseInt(document.getElementById('s-bit').value)/100;
-  noise.amp    = parseInt(document.getElementById('s-amp').value)/100;
-
-  document.getElementById('v-depol').textContent   = Math.round(noise.depol*100)+'%';
-  document.getElementById('v-phase').textContent   = Math.round(noise.phase*100)+'%';
-  document.getElementById('v-bit').textContent     = Math.round(noise.bit*100)+'%';
-  document.getElementById('v-amp').textContent     = Math.round(noise.amp*100)+'%';
+  labNoise.depol = +document.getElementById('s-depol').value / 100;
+  labNoise.phase = +document.getElementById('s-phase').value / 100;
+  labNoise.bit   = +document.getElementById('s-bit').value / 100;
+  labNoise.amp   = +document.getElementById('s-amp').value / 100;
+  document.getElementById('v-depol').textContent = Math.round(labNoise.depol*100)+'%';
+  document.getElementById('v-phase').textContent = Math.round(labNoise.phase*100)+'%';
+  document.getElementById('v-bit').textContent   = Math.round(labNoise.bit*100)+'%';
+  document.getElementById('v-amp').textContent   = Math.round(labNoise.amp*100)+'%';
 }
 
-function applyPreset(name){
-  const sets={
+function applyPreset(name) {
+  const P = {
     clean:  [0,0,0,0],
     noisy:  [80,50,30,20],
-    t1only: [0,0,0,50],
-    phase:  [0,70,0,5],
+    t1only: [0,0,0,60],
+    t2like: [0,70,0,10],
   };
-  if(name==='pause'){togglePause();return;}
-  const s=sets[name]||sets.clean;
-  const ids=['s-depol','s-phase','s-bit','s-amp'];
-  ids.forEach((id,i)=>document.getElementById(id).value=s[i]);
+  const s = P[name] || P.clean;
+  ['s-depol','s-phase','s-bit','s-amp'].forEach((id,i) => document.getElementById(id).value = s[i]);
   updateNoise();
 }
 
-function resetState(){
-  noise={depol:0,phase:0,bit:0,amp:.01};
-  ['s-depol','s-phase','s-bit','s-amp'].forEach(id=>document.getElementById(id).value=id==='s-amp'?1:0);
-  updateNoise();
-  graphHistory=[];
-  labT0=null;
+function resetLab() {
+  labPaused = false;
+  const btn = document.getElementById('pause-btn');
+  btn.textContent = '⏸ PAUSE'; btn.classList.remove('active');
+  labGraphHist = [];
+  labT0 = null; labT = 0;
+  applyPreset('clean');
 }
 
-function setInitState(n){
-  activeInitState=n;
-  ['sb-0','sb-1','sb-plus','sb-minus'].forEach((id,i)=>{
-    document.getElementById(id).classList.toggle('active',i===n);
-  });
-  // Set initial theta/phi
-  const states=[[0,0],[Math.PI,0],[Math.PI/2,0],[Math.PI/2,Math.PI]];
-  labTheta=states[n][0]; labPhi=states[n][1];
+function setInitState(n) {
+  activeState = n;
+  ['sb-0','sb-1','sb-plus','sb-minus'].forEach((id,i) =>
+    document.getElementById(id).classList.toggle('on', i===n));
 }
 
-function togglePause(){
-  labPaused=!labPaused;
-  document.getElementById('pause-btn').textContent=labPaused?'▶ Resume':'⏸ Pause';
+function togglePause() {
+  labPaused = !labPaused;
+  const btn = document.getElementById('pause-btn');
+  if (labPaused) { btn.textContent = '▶ RESUME EVOLUTION'; btn.classList.add('active'); }
+  else { btn.textContent = '⏸ PAUSE'; btn.classList.remove('active'); }
 }
 
-function toggleFilter(key, btn){
-  graphFilters[key]=!graphFilters[key];
-  btn.classList.toggle('active', graphFilters[key]);
+function toggleGraphFilter(key, el) {
+  labFilters[key] = !labFilters[key];
+  el.classList.toggle('on', labFilters[key]);
+  const fb = document.getElementById('fb-'+key);
+  if (fb) fb.classList.toggle('on', labFilters[key]);
 }
 
-function takeSnapshot(){
-  const coh = parseFloat(document.getElementById('stat-coh').textContent);
+function toggleFilter(key, btn) {
+  labFilters[key] = !labFilters[key];
+  btn.classList.toggle('on', labFilters[key]);
+  const leg = document.getElementById('leg-'+key);
+  if (leg) leg.classList.toggle('on', labFilters[key]);
+}
+
+function takeSnap() {
   const t = new Date().toLocaleTimeString();
-  snapshots.unshift({t, coh, theta:labTheta, phi:labPhi});
-  if(snapshots.length>4) snapshots.pop();
-  renderSnapshots();
+  snapList.unshift({ t, r: labBlochR, theta_deg: 0 });
+  if (snapList.length > 5) snapList.pop();
+  renderSnapList();
 }
 
-function renderSnapshots(){
-  const el = document.getElementById('snapshots-list');
-  if(!snapshots.length){el.innerHTML='<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#334155;text-align:center;padding:20px 0;">No snapshots yet.</div>';return;}
-  el.innerHTML=snapshots.map(s=>`
+function renderSnapList() {
+  const el = document.getElementById('snap-list');
+  if (!snapList.length) {
+    el.innerHTML = '<div class="no-snap">No snapshots yet.<br>Double-click sphere or use 📷</div>'; return;
+  }
+  el.innerHTML = snapList.map(s => `
     <div class="snap-item">
-      <div class="snap-label">${s.t}</div>
-      |R| = ${s.coh.toFixed(3)}  θ=${(s.theta*180/Math.PI).toFixed(1)}°
+      <div class="snap-t">${s.t}</div>
+      |R| = ${s.r.toFixed(3)} &nbsp; Purity = ${(0.5+0.5*s.r*s.r).toFixed(3)}
     </div>`).join('');
 }
 
-/* Lab canvas init */
-function initLabCanvas(){
-  if(labInited) return;
-  labInited=true;
+// Accurate noise channel physics on Bloch vector
+function applyNoise(bx, by, bz) {
+  let x=bx, y=by, z=bz;
+  // 1. Depolarizing: shrinks all components uniformly → maximally mixed at p=1
+  const p_d = labNoise.depol;
+  x *= (1 - p_d);
+  y *= (1 - p_d);
+  z *= (1 - p_d);
+  // 2. Bit-flip (X error): maps σ_y, σ_z components. X invariant, Y and Z attenuated
+  const p_b = labNoise.bit;
+  const sf_b = 1 - 2*p_b;
+  y *= sf_b; z *= sf_b;
+  // 3. Phase-flip (Z error): maps σ_x, σ_y components. Z invariant, X and Y attenuated
+  const p_p = labNoise.phase;
+  const sf_p = 1 - 2*p_p;
+  x *= sf_p; y *= sf_p;
+  // 4. Amplitude damping: energy relaxation toward |0> (z=+1 in our convention)
+  const gamma = labNoise.amp;
+  x *= Math.sqrt(Math.max(0, 1-gamma));
+  y *= Math.sqrt(Math.max(0, 1-gamma));
+  z = (1-gamma)*z + gamma;
+  return { x, y, z };
+}
 
-  const canvas=document.getElementById('lab-canvas');
-  const graphC=document.getElementById('graph-canvas');
-  const fidelC=document.getElementById('fidelity-bar-canvas');
-  if(!canvas)return;
-  const ctx=canvas.getContext('2d');
+function drawLabGraph(graphC) {
+  const gc = graphC.getContext('2d');
+  const GW = graphC.width, GH = graphC.height;
+  gc.clearRect(0,0,GW,GH);
+  gc.fillStyle='rgba(0,0,0,.25)'; gc.fillRect(0,0,GW,GH);
+  // grid lines
+  gc.strokeStyle='rgba(255,255,255,.04)'; gc.lineWidth=1;
+  [-1,-.5,0,.5,1].forEach(v => {
+    const y = GH/2 - v*(GH*.43);
+    gc.beginPath(); gc.moveTo(32,y); gc.lineTo(GW,y); gc.stroke();
+    gc.fillStyle='rgba(71,85,105,.35)'; gc.font='8px "JetBrains Mono",monospace'; gc.textAlign='right';
+    gc.fillText(v.toFixed(1), 28, y+3);
+  });
+  if (labGraphHist.length < 2) return;
+  const step = (GW-32) / GHIST;
+  const series = [
+    { key:'r', col:'#60a5fa', lw:2.0 },
+    { key:'x', col:'#f87171', lw:1.3 },
+    { key:'y', col:'#4ade80', lw:1.3 },
+    { key:'z', col:'#a78bfa', lw:1.3 },
+  ];
+  series.forEach(s => {
+    if (!labFilters[s.key]) return;
+    gc.save(); gc.beginPath(); gc.strokeStyle=s.col; gc.lineWidth=s.lw;
+    gc.globalAlpha = s.key==='r' ? .92 : .70; gc.lineJoin='round';
+    labGraphHist.forEach((pt, i) => {
+      const x = 32 + i*step;
+      const v = pt[s.key];
+      const y = GH/2 - v*(GH*.43);
+      i===0 ? gc.moveTo(x,y) : gc.lineTo(x,y);
+    });
+    gc.stroke(); gc.restore();
+  });
+}
 
-  // Size graph canvas
-  function sizeGraph(){
-    const ga=document.querySelector('.graph-area');
-    if(!ga)return;
-    graphC.width=ga.clientWidth-32;  graphC.height=90;
-    fidelC.width=ga.clientWidth-32;  fidelC.height=22;
+function drawFidelityBar(fidC) {
+  const fc = fidC.getContext('2d');
+  const FW=fidC.width, FH=fidC.height;
+  fc.clearRect(0,0,FW,FH);
+  fc.fillStyle='rgba(255,255,255,.04)'; fc.fillRect(0,0,FW,FH);
+  const r = labBlochR;
+  const grad = fc.createLinearGradient(0,0,FW*r,0);
+  if (r > .7) { grad.addColorStop(0,'#1d4ed8'); grad.addColorStop(1,'#22c55e'); }
+  else if (r > .35) { grad.addColorStop(0,'#1d4ed8'); grad.addColorStop(1,'#eab308'); }
+  else { grad.addColorStop(0,'#7f1d1d'); grad.addColorStop(1,'#ef4444'); }
+  fc.fillStyle=grad; fc.fillRect(0,0,FW*r,FH);
+  fc.fillStyle='rgba(255,255,255,.55)'; fc.font='700 8px "JetBrains Mono",monospace'; fc.textBaseline='middle'; fc.textAlign='left';
+  fc.fillText('FIDELITY  '+(r*100).toFixed(1)+'%', 10, FH/2);
+}
+
+function initLab() {
+  if (labInited) return;
+  labInited = true;
+
+  const canvas = document.getElementById('lab-canvas');
+  const graphC = document.getElementById('graph-canvas');
+  const fidC   = document.getElementById('fid-canvas');
+  if (!canvas) return;
+
+  labRenderer = new BlochRenderer(canvas, 170, { autoSpeed: 0.005 });
+  canvas.addEventListener('dblclick', takeSnap);
+
+  function sizeGraph() {
+    const ga = document.querySelector('.graph-area');
+    if (!ga) return;
+    const w = ga.clientWidth - 36;
+    graphC.width = w; graphC.height = 110;
+    fidC.width   = w; fidC.height  = 20;
   }
   sizeGraph();
-  window.addEventListener('resize',sizeGraph);
+  window.addEventListener('resize', sizeGraph);
 
-  const W=340,H=340,cx2=170,cy2=170;
+  let labT0ts = null;
+  let labTheta = 0, labPhi = 0;
 
-  canvas.addEventListener('mousedown',e=>{labDragging=true;labLMX=e.clientX;labLMY=e.clientY;});
-  window.addEventListener('mouseup',()=>labDragging=false);
-  window.addEventListener('mousemove',e=>{
-    if(!labDragging)return;
-    labRotY+=(e.clientX-labLMX)*.013; labRotX+=(e.clientY-labLMY)*.013;
-    labRotX=Math.max(-1.5,Math.min(1.5,labRotX));
-    labLMX=e.clientX;labLMY=e.clientY;
-  });
-  canvas.addEventListener('dblclick',takeSnapshot);
-
-  function proj2(x,y,z,R){
-    const cosX=Math.cos(labRotX),sinX=Math.sin(labRotX);
-    const y1=y*cosX-z*sinX, z1=y*sinX+z*cosX;
-    const cosY=Math.cos(labRotY),sinY=Math.sin(labRotY);
-    const x2=x*cosY+z1*sinY, z2=-x*sinY+z1*cosY;
-    const d=800,s=d/(d+z2+R);
-    return{sx:cx2+x2*s,sy:cy2-y1*s,depth:z2};
-  }
-
-  function lc3(x1,y1,z1,x2,y2,z2,col,alpha,lw,dashed,R){
-    const a=proj2(x1,y1,z1,R),b=proj2(x2,y2,z2,R);
-    ctx.save();if(dashed)ctx.setLineDash([4,6]);ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);
-    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
-  }
-
-  function circle3L(nx,ny,nz,r,col,alpha,lw,R){
-    let ax,ay,az;
-    if(Math.abs(nx)<.9){ax=0;ay=-nz;az=ny;}else{ax=-ny;ay=nx;az=0;}
-    const la=Math.hypot(ax,ay,az);ax/=la;ay/=la;az/=la;
-    const bx=ny*az-nz*ay,by=nz*ax-nx*az,bz=nx*ay-ny*ax;
-    const N=96;
-    ctx.save();ctx.beginPath();
-    for(let i=0;i<=N;i++){const a=(i/N)*Math.PI*2,c=Math.cos(a)*r,s=Math.sin(a)*r;const p=proj2(c*ax+s*bx,c*ay+s*by,c*az+s*bz,R);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
-    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
-  }
-
-  function latR(yOff,col,alpha,lw,R){
-    const r=Math.sqrt(Math.max(0,R*R-yOff*yOff));if(r<1)return;
-    ctx.save();ctx.beginPath();
-    for(let i=0;i<=96;i++){const a=(i/96)*Math.PI*2;const p=proj2(Math.cos(a)*r,yOff,Math.sin(a)*r,R);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
-    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
-  }
-
-  function dot3L(x,y,z,r,col,alpha,R){
-    const p=proj2(x,y,z,R);ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(p.sx,p.sy,r,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.restore();
-  }
-
-  function label3L(x,y,z,text,col,alpha,R){
-    const p=proj2(x,y,z,R);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=col;ctx.font='bold 10px JetBrains Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,p.sx,p.sy);ctx.restore();
-  }
-
-  function drawLabSphere(R){
-    ctx.save();ctx.beginPath();ctx.arc(cx2,cy2,R,0,Math.PI*2);ctx.clip();
-    const bg=ctx.createRadialGradient(cx2-R*.28,cy2-R*.28,R*.05,cx2,cy2,R*1.1);
-    bg.addColorStop(0,'rgba(20,42,90,.30)');bg.addColorStop(.5,'rgba(10,10,20,.18)');bg.addColorStop(1,'rgba(0,0,0,.40)');
-    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    const hl=ctx.createRadialGradient(cx2-R*.38,cy2-R*.36,0,cx2-R*.22,cy2-R*.22,R*.6);
-    hl.addColorStop(0,'rgba(100,180,255,.10)');hl.addColorStop(.5,'rgba(40,100,200,.05)');hl.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=hl;ctx.fillRect(0,0,W,H);ctx.restore();
-  }
-
-  function drawLabGrid(R){
-    for(let i=0;i<8;i++){const a=(i/8)*Math.PI;circle3L(Math.sin(a),0,Math.cos(a),R,'#1e3a6a',.35,.8,R);}
-    [.25,.5,.75].forEach(f=>{const y=R*(1-2*f);latR(y,f===.5?'#1e40af':'#1e3a5f',f===.5?.55:.25,f===.5?1.2:.8,R);});
-  }
-
-  function drawLabAxes(R){
-    const L=R*1.18;
-    lc3(0,L,0,0,-L,0,'#475569',.5,1,false,R);
-    lc3(-L,0,0,L,0,0,'#2d3d50',.38,.8,false,R);
-    lc3(0,0,-L,0,0,L,'#2d3d50',.28,.8,true,R);
-    dot3L(0,R,0,4,'#60a5fa',.85,R);dot3L(0,-R,0,4,'#60a5fa',.85,R);
-    label3L(0,R*1.13,0,'|0⟩','#60a5fa',.7,R);
-    label3L(0,-R*1.13,0,'|1⟩','#60a5fa',.7,R);
-    label3L(R*1.12,0,0,'+X','#334d66',.45,R);
-    label3L(-R*1.12,0,0,'−X','#334d66',.45,R);
-  }
-
-  function drawLabVector(tipX,tipY,tipZ,t,R){
-    const O=proj2(0,0,0,R),T=proj2(tipX,tipY,tipZ,R);
-    const dx=T.sx-O.sx,dy=T.sy-O.sy,len=Math.hypot(dx,dy);if(len<1)return;
-    const ux=dx/len,uy=dy/len;
-    // White glowing arrow (matching video)
-    [[16,.025,16],[8,.07,8],[3.5,.20,3],[1.8,.70,0],[1,.95,0]].forEach(([lw,a,bl])=>{
-      ctx.save();ctx.shadowBlur=bl;ctx.shadowColor='#ffffff';ctx.strokeStyle='#e2e8f0';
-      ctx.lineWidth=lw;ctx.globalAlpha=a;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(O.sx,O.sy);ctx.lineTo(T.sx-ux*11,T.sy-uy*11);ctx.stroke();ctx.restore();
-    });
-    const ang=Math.atan2(dy,dx),hL=14,hA=.42;
-    ctx.save();ctx.shadowBlur=12;ctx.shadowColor='#fff';ctx.fillStyle='#e2e8f0';ctx.globalAlpha=.95;
-    ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(T.sx-hL*Math.cos(ang-hA),T.sy-hL*Math.sin(ang-hA));ctx.lineTo(T.sx-hL*Math.cos(ang+hA),T.sy-hL*Math.sin(ang+hA));ctx.closePath();ctx.fill();ctx.restore();
-    // tip pulse
-    const pulse=4+Math.sin(t*5)*1.8;
-    const g=ctx.createRadialGradient(T.sx,T.sy,0,T.sx,T.sy,pulse*3);
-    g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.4,'rgba(200,230,255,.55)');g.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.save();ctx.shadowBlur=20;ctx.shadowColor='#fff';ctx.beginPath();ctx.arc(T.sx,T.sy,pulse*3,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.restore();
-    // projection line
-    const E=proj2(tipX,0,tipZ,R);
-    ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='#60a5fa';ctx.globalAlpha=.20;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(E.sx,E.sy);ctx.stroke();ctx.restore();
-    dot3L(tipX,0,tipZ,3,'#60a5fa',.35,R);
-    dot3L(0,0,0,3,'#475569',.55,R);
-  }
-
-  /* Graph rendering */
-  function drawGraph(){
-    const gctx=graphC.getContext('2d');
-    const GW=graphC.width,GH=graphC.height;
-    gctx.clearRect(0,0,GW,GH);
-    // background
-    gctx.fillStyle='rgba(255,255,255,0.02)';gctx.fillRect(0,0,GW,GH);
-    // grid lines
-    gctx.strokeStyle='rgba(255,255,255,0.04)';gctx.lineWidth=1;
-    [0,.25,.5,.75,1].forEach(f=>{
-      const y=GH/2+(f-.5)*GH*.9;
-      gctx.beginPath();gctx.moveTo(0,y);gctx.lineTo(GW,y);gctx.stroke();
-    });
-
-    if(graphHistory.length<2)return;
-
-    const step=GW/HIST_LEN;
-    const series=[
-      {key:'r',  col:'#60a5fa', active:graphFilters.coh},
-      {key:'x',  col:'#f87171', active:graphFilters.x},
-      {key:'y',  col:'#4ade80', active:graphFilters.y},
-      {key:'z',  col:'#a78bfa', active:graphFilters.z},
-    ];
-
-    series.forEach(s=>{
-      if(!s.active && s.key!=='r') return; // always draw coherence
-      gctx.save();
-      gctx.beginPath();
-      gctx.strokeStyle=s.col;
-      gctx.lineWidth= s.key==='r'?1.8:1.2;
-      gctx.globalAlpha= s.key==='r'?0.9:0.65;
-      graphHistory.forEach((pt,i)=>{
-        const x=i*step;
-        const val=pt[s.key];
-        const y=GH/2 - val*(GH*.45);
-        i===0?gctx.moveTo(x,y):gctx.lineTo(x,y);
-      });
-      gctx.stroke();
-      gctx.restore();
-    });
-  }
-
-  function drawFidelityBar(){
-    const fc=fidelC.getContext('2d');
-    const FW=fidelC.width,FH=fidelC.height;
-    fc.clearRect(0,0,FW,FH);
-    fc.fillStyle='rgba(255,255,255,0.04)';fc.fillRect(0,0,FW,FH);
-    const coh=blochR;
-    const grad=fc.createLinearGradient(0,0,FW*coh,0);
-    grad.addColorStop(0,'#1d4ed8');grad.addColorStop(1,coh>0.5?'#22c55e':'#ef4444');
-    fc.fillStyle=grad;fc.fillRect(0,0,FW*coh,FH);
-    // label
-    fc.fillStyle='rgba(255,255,255,.5)';fc.font='9px JetBrains Mono,monospace';fc.textBaseline='middle';
-    fc.fillText('FIDELITY  '+( coh*100).toFixed(1)+'%',8,FH/2);
-  }
-
-  /* Apply selected channels to a Bloch vector (x,y,z). */
-  function applyNoiseToBloch(x,y,z){
-    // Depolarizing: isotropic shrink toward maximally mixed state.
-    const depolScale = 1 - noise.depol;
-    x *= depolScale; y *= depolScale; z *= depolScale;
-
-    // Bit flip: X invariant, Y/Z attenuate with sign possible at p>0.5.
-    const bitScale = 1 - 2*noise.bit;
-    y *= bitScale; z *= bitScale;
-
-    // Phase flip: Z invariant, X/Y attenuate with sign possible at p>0.5.
-    const phaseScale = 1 - 2*noise.phase;
-    x *= phaseScale; y *= phaseScale;
-
-    // Amplitude damping toward |0> (+Z in this simulation's logical basis).
-    const g = noise.amp;
-    const ampXY = Math.sqrt(Math.max(0,1-g));
-    x *= ampXY; y *= ampXY;
-    z = (1-g)*z + g;
-
-    return {x,y,z};
-  }
-
-  /* Main lab loop */
-  function labLoop(ts){
-    if(!document.getElementById('lab-page').classList.contains('active')){requestAnimationFrame(labLoop);return;}
-    if(!labT0)labT0=ts;
-    if(!labPaused) labT=(ts-labT0)/1000;
-    ctx.clearRect(0,0,W,H);
-
-    if(!labDragging && !labPaused) labRotY+=.005;
-
-    const sphereR = 140; // fixed outer shell
+  function loop(ts) {
+    if (!document.getElementById('lab-page').classList.contains('active')) { requestAnimationFrame(loop); return; }
+    if (!labT0ts) labT0ts = ts;
+    if (!labPaused) labT = (ts - labT0ts) / 1000;
 
     // Animate state
-    if(!labPaused){
-      labPhi = labT*0.65;
-      const baseTheta = [0,Math.PI,Math.PI/2,Math.PI/2][activeInitState];
-      labTheta = baseTheta + Math.sin(labT*.40)*.35*(1-noise.depol*.7);
+    if (!labPaused) {
+      labPhi = labT * 0.65;
+      const baseTheta = [0, Math.PI, Math.PI/2, Math.PI/2][activeState];
+      labTheta = baseTheta + Math.sin(labT * .40) * .35;
     }
 
-    // Base pure-state Bloch vector from (theta, phi).
-    const baseX = Math.sin(labTheta)*Math.cos(labPhi);
-    const baseY = Math.sin(labTheta)*Math.sin(labPhi);
-    const baseZ = Math.cos(labTheta);
-    const noisy = applyNoiseToBloch(baseX,baseY,baseZ);
-    blochR = Math.min(1,Math.hypot(noisy.x,noisy.y,noisy.z));
+    const rawBx = Math.sin(labTheta)*Math.cos(labPhi);
+    const rawBy = Math.sin(labTheta)*Math.sin(labPhi);
+    const rawBz = Math.cos(labTheta);
+    const n = applyNoise(rawBx, rawBy, rawBz);
+    labBlochR = Math.min(1, Math.hypot(n.x, n.y, n.z));
 
-    // Rendering axes use Y as vertical, so map logical Z -> render Y.
-    const tipX = sphereR * noisy.x;
-    const tipY = sphereR * noisy.z;
-    const tipZ = sphereR * noisy.y;
+    labRenderer.render(n.x, n.y, n.z, labT);
 
-    // Draw outer ghost sphere (always full size)
-    circle3L(0,1,0, sphereR,'#0f2040',.45,.8,sphereR); // equator
-    for(let i=0;i<8;i++){const a=(i/8)*Math.PI;circle3L(Math.sin(a),0,Math.cos(a),sphereR,'#0f2040',.22,.6,sphereR);}
-    [.25,.5,.75].forEach(f=>{const y=sphereR*(1-2*f);latR(y,'#0f2040',f===.5?.38:.18,.6,sphereR);});
-
-    // Filled colored sphere at blochR size (if small enough, different color)
-    drawLabSphere(sphereR);
-    drawLabGrid(sphereR);
-    drawLabAxes(sphereR);
-    drawLabVector(tipX,tipY,tipZ,labT,sphereR);
-
-    // History
-    if(!labPaused){
-      graphHistory.push({
-        r:blochR,
-        x:noisy.x,
-        y:noisy.y,
-        z:noisy.z
-      });
-      if(graphHistory.length>HIST_LEN)graphHistory.shift();
+    if (!labPaused) {
+      labGraphHist.push({ r:labBlochR, x:n.x, y:n.y, z:n.z });
+      if (labGraphHist.length > GHIST) labGraphHist.shift();
     }
-    drawGraph();
-    drawFidelityBar();
+    drawLabGraph(graphC);
+    drawFidelityBar(fidC);
 
     // Stats
-    const coh=blochR.toFixed(3);
-    const pur=Math.min(1,(0.5+0.5*blochR*blochR)).toFixed(3);
-    const zp=(0.5+0.5*noisy.z).toFixed(3);
-    const fid=blochR.toFixed(3);
-    const cohEl=document.getElementById('stat-coh');
-    const purEl=document.getElementById('stat-pur');
-    cohEl.textContent=coh; purEl.textContent=pur;
-    document.getElementById('stat-z').textContent=zp;
-    document.getElementById('stat-fid').textContent=fid;
-    const setColor=(el,v)=>{el.className='stat-val '+(v>0.8?'green':v>0.4?'yellow':'red');};
-    setColor(cohEl,blochR); setColor(purEl,parseFloat(pur));
+    const pur = Math.min(1, .5 + .5*labBlochR*labBlochR);
+    const zp  = .5 + .5*n.z;
+    const fid = labBlochR;
+    const color = v => v>.80?'g':v>.40?'y':'r';
+    ['st-coh','st-pur','st-fid'].forEach((id,i)=>{
+      const vals = [labBlochR, pur, fid];
+      const el = document.getElementById(id);
+      el.textContent = vals[i].toFixed(3);
+      el.className = 'stat-num '+color(vals[i]);
+    });
+    document.getElementById('st-z').textContent = zp.toFixed(3);
 
     // Badge
-    const badge=document.getElementById('coherence-badge');
-    if(blochR>0.85){badge.textContent='COHERENT STATE';badge.className='state-badge badge-coherent';}
-    else if(blochR>0.4){badge.textContent='PARTIALLY MIXED';badge.className='state-badge badge-noisy';}
-    else{badge.textContent='MAXIMALLY MIXED';badge.className='state-badge badge-mixed';}
+    const badge = document.getElementById('coh-badge');
+    if (labBlochR > .85) { badge.textContent='COHERENT STATE'; badge.className='badge badge-ok'; }
+    else if (labBlochR > .35) { badge.textContent='PARTIALLY MIXED'; badge.className='badge badge-warn'; }
+    else { badge.textContent='MAXIMALLY MIXED'; badge.className='badge badge-err'; }
 
-    requestAnimationFrame(labLoop);
+    requestAnimationFrame(loop);
   }
-  requestAnimationFrame(labLoop);
+  requestAnimationFrame(loop);
 }
+
+
+/* ════════════════════════════════
+   QUANTUM vs CLASSICAL
+════════════════════════════════ */
+let qvcInited = false;
+let qvcNoise = 0;
+let qvcCHist = [], qvcQHist = [];
+let qvcFlips = 0, qvcBitState = 0;
+let qvcT = 0, qvcT0ts = null;
+let qvcCRenderer = null, qvcQRenderer = null;
+
+function qvcSetNoise(v) {
+  qvcNoise = +v / 100;
+  document.getElementById('qvc-noise-disp').textContent = v+'%';
+}
+
+function qvcApplyPreset(v) {
+  document.getElementById('qvc-slider').value = v;
+  qvcSetNoise(v);
+}
+
+function initQvC() {
+  if (qvcInited) return;
+  qvcInited = true;
+
+  const cc = document.getElementById('qvc-c-canvas');
+  const qc = document.getElementById('qvc-q-canvas');
+  const cbCanvas = document.getElementById('qvc-c-bloch');
+  const qbCanvas = document.getElementById('qvc-q-bloch');
+
+  cc.width = cc.parentElement.clientWidth - 40;
+  qc.width = qc.parentElement.clientWidth - 40;
+
+  // Classical sphere shows two stable poles
+  qvcCRenderer = new BlochRenderer(cbCanvas, 108, { autoSpeed: 0.003 });
+  qvcQRenderer = new BlochRenderer(qbCanvas, 108, { autoSpeed: 0.003 });
+
+  const HLEN = 180;
+  let frame_qvc = null;
+
+  function qvcLoop(ts) {
+    if (!document.getElementById('qvc-page').classList.contains('active')) { frame_qvc = null; qvcInited = false; return; }
+    if (!qvcT0ts) qvcT0ts = ts;
+    qvcT = (ts - qvcT0ts) / 1000;
+
+    // Classical bit: almost never flips — only when noise is very high
+    if (Math.random() < qvcNoise * qvcNoise * 0.003) {
+      qvcBitState = 1 - qvcBitState;
+      qvcFlips++;
+    }
+    qvcCHist.push(qvcBitState);
+    if (qvcCHist.length > HLEN) qvcCHist.shift();
+
+    // Quantum qubit: coherence decays with noise (multiple channels)
+    const phi = qvcT * 0.6;
+    const theta = Math.PI/2; // start in |+> for visibility
+    const rawBx = Math.sin(theta)*Math.cos(phi);
+    const rawBy = Math.sin(theta)*Math.sin(phi);
+    const rawBz = Math.cos(theta);
+    // Apply all noise proportional to single qvcNoise slider
+    const n = qvcApplyNoise(rawBx, rawBy, rawBz, qvcNoise);
+    const qCoh = Math.min(1, Math.hypot(n.x, n.y, n.z));
+    qvcQHist.push({ r:qCoh, x:n.x, y:n.y, z:n.z });
+    if (qvcQHist.length > HLEN) qvcQHist.shift();
+
+    // Draw classical graph
+    drawQvCClassic(cc, qvcNoise);
+    // Draw quantum graph
+    drawQvCQuantum(qc);
+    // Draw spheres
+    drawQvCSpheres(qvcNoise, n, qCoh, phi);
+    // Update stats
+    updateQvCStats(qCoh, n.z);
+
+    requestAnimationFrame(qvcLoop);
+  }
+  requestAnimationFrame(qvcLoop);
+}
+
+function qvcApplyNoise(bx, by, bz, level) {
+  let x=bx, y=by, z=bz;
+  x *= (1-level); y *= (1-level); z *= (1-level); // depolarizing
+  const sf = 1-2*Math.min(level*.6,.5);
+  x *= sf; y *= sf; // phase flip
+  const gamma = level*.7;
+  x *= Math.sqrt(Math.max(0,1-gamma)); y *= Math.sqrt(Math.max(0,1-gamma));
+  z = (1-gamma)*z + gamma;
+  return {x,y,z};
+}
+
+function drawQvCClassic(canvas, noise) {
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  // Background
+  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle='rgba(34,197,94,.08)'; ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(f=>{
+    const y=H*(1-f)*.85+H*.07;
+    ctx.beginPath(); ctx.moveTo(40,y); ctx.lineTo(W-10,y); ctx.stroke();
+  });
+  // Labels
+  ctx.fillStyle='rgba(34,197,94,.4)'; ctx.font='9px "JetBrains Mono",monospace'; ctx.textAlign='right';
+  ctx.fillText('|1⟩',36,H*.15);
+  ctx.fillText('|0⟩',36,H*.85);
+  // Bit line — classical bit is perfectly stable
+  const lineY = qvcBitState===0 ? H*.83 : H*.17;
+  const noisyY = noise > 0.3 ? lineY + (Math.random()-0.5)*noise*6 : lineY; // slight jitter at high noise
+  // Draw stable horizontal line
+  ctx.strokeStyle='#22c55e'; ctx.lineWidth=2.5; ctx.globalAlpha=.9;
+  ctx.beginPath();
+  const stepW = (W-50)/HIST_QVC;
+  qvcCHist.forEach((v,i) => {
+    const x=40+i*stepW;
+    const y = v===0 ? H*.83 : H*.17;
+    const jitter = noise > .3 ? (Math.random()-0.5)*noise*4 : 0;
+    i===0 ? ctx.moveTo(x,y+jitter) : ctx.lineTo(x,y+jitter);
+  });
+  ctx.stroke(); ctx.globalAlpha=1;
+  // Draw threshold bands (error correction zones)
+  ctx.fillStyle='rgba(34,197,94,.06)'; ctx.fillRect(40,H*.05,W-50,H*.25);
+  ctx.fillStyle='rgba(34,197,94,.06)'; ctx.fillRect(40,H*.70,W-50,H*.25);
+  // Current state indicator
+  ctx.fillStyle='#22c55e'; ctx.globalAlpha=.9;
+  ctx.beginPath(); ctx.arc(W-20,lineY,6,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+}
+
+const HIST_QVC = 180;
+function drawQvCQuantum(canvas) {
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(0,0,W,H);
+  if (qvcQHist.length < 2) return;
+  // Grid
+  ctx.strokeStyle='rgba(96,165,250,.08)'; ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(f=>{
+    const y=H*(1-f)*.85+H*.07;
+    ctx.beginPath(); ctx.moveTo(40,y); ctx.lineTo(W-10,y); ctx.stroke();
+    ctx.fillStyle='rgba(96,165,250,.35)'; ctx.font='8px "JetBrains Mono",monospace'; ctx.textAlign='right';
+    ctx.fillText(f.toFixed(2), 36, y+3);
+  });
+  ctx.fillStyle='rgba(96,165,250,.4)'; ctx.font='8px "JetBrains Mono",monospace'; ctx.textAlign='right';
+  ctx.fillText('|R|', 34, H*.07);
+  // Coherence fill
+  const step = (W-50)/HIST_QVC;
+  ctx.save(); ctx.beginPath();
+  qvcQHist.forEach((pt,i)=>{
+    const x=40+i*step; const y=H*(1-pt.r)*.85+H*.07;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.lineTo(40+(qvcQHist.length-1)*step,H*.92); ctx.lineTo(40,H*.92); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(59,130,246,.25)'); grad.addColorStop(1,'rgba(59,130,246,.02)');
+  ctx.fillStyle=grad; ctx.fill(); ctx.restore();
+  // Coherence line
+  ctx.strokeStyle='#60a5fa'; ctx.lineWidth=2.2; ctx.lineJoin='round'; ctx.beginPath();
+  qvcQHist.forEach((pt,i)=>{
+    const x=40+i*step; const y=H*(1-pt.r)*.85+H*.07;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // X component (oscillation visible)
+  ctx.strokeStyle='#f87171'; ctx.lineWidth=1; ctx.globalAlpha=.55; ctx.beginPath();
+  qvcQHist.forEach((pt,i)=>{
+    const x=40+i*step; const y=H*.5-pt.x*(H*.38);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke(); ctx.globalAlpha=1;
+}
+
+function drawQvCSpheres(noise, qn, qCoh, phi) {
+  // Classical: always show a dot at the pole it's in
+  const cbCtx = document.getElementById('qvc-c-bloch');
+  if (qvcCRenderer) {
+    qvcCRenderer.clear();
+    qvcCRenderer.tick();
+    qvcCRenderer.drawShell();
+    qvcCRenderer.drawGrid();
+    qvcCRenderer.drawAxes(.85);
+    // Always at pure poles
+    const bz = qvcBitState===0 ? 1 : -1;
+    // Draw both poles as options
+    qvcCRenderer.dot3D(0, 1, 0, 8, '#22c55e', .90); // |0> pole
+    qvcCRenderer.dot3D(0, -1, 0, 8, '#22c55e', .45); // |1> pole
+    // Draw current state indicator as solid glowing dot
+    const poleY = qvcBitState===0 ? qvcCRenderer.R : -qvcCRenderer.R;
+    const pp = qvcCRenderer.proj(0, poleY, 0);
+    const ctx = qvcCRenderer.ctx;
+    const g = ctx.createRadialGradient(pp.sx,pp.sy,0,pp.sx,pp.sy,18);
+    g.addColorStop(0,'rgba(34,197,94,.95)'); g.addColorStop(1,'rgba(34,197,94,0)');
+    ctx.save(); ctx.beginPath(); ctx.arc(pp.sx,pp.sy,18,0,Math.PI*2); ctx.fillStyle=g; ctx.fill(); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.arc(pp.sx,pp.sy,7,0,Math.PI*2); ctx.fillStyle='#22c55e'; ctx.globalAlpha=.95; ctx.fill(); ctx.restore();
+    // Label
+    ctx.save(); ctx.fillStyle='rgba(34,197,94,.6)'; ctx.font='700 9px "JetBrains Mono",monospace'; ctx.textAlign='center';
+    ctx.fillText(noise===0?'STABLE':'ROBUST',pp.sx,pp.sy+22); ctx.restore();
+  }
+  // Quantum: draw actual Bloch vector shrinking
+  if (qvcQRenderer) {
+    qvcQRenderer.render(qn.x, qn.y, qn.z, qvcT, '#60a5fa', '#3b82f6');
+    // If very mixed, add mixed sphere indicator ring
+    if (qCoh < 0.5) {
+      const ctx = qvcQRenderer.ctx;
+      const cx=qvcQRenderer.cx, cy=qvcQRenderer.cy;
+      ctx.save(); ctx.strokeStyle='rgba(239,68,68,.35)'; ctx.lineWidth=1.5;
+      ctx.setLineDash([4,6]); ctx.beginPath(); ctx.arc(cx,cy,qvcQRenderer.R*qCoh,0,Math.PI*2);
+      ctx.stroke(); ctx.restore();
+    }
+  }
+}
+
+function updateQvCStats(qCoh, qBz) {
+  const stab = Math.max(0, 100 - qvcFlips*5);
+  const errRate = (qvcNoise*qvcNoise*0.3*100).toFixed(1);
+  document.getElementById('qvc-c-state').textContent = qvcBitState===0?'|0⟩':'|1⟩';
+  document.getElementById('qvc-c-flips').textContent = qvcFlips;
+  document.getElementById('qvc-c-stab').textContent  = Math.max(0,100-qvcFlips*2)+'%';
+  document.getElementById('qvc-c-err').textContent   = errRate+'%';
+  const pur = Math.min(1,.5+.5*qCoh*qCoh);
+  document.getElementById('qvc-q-coh').textContent   = qCoh.toFixed(3);
+  document.getElementById('qvc-q-fid').textContent   = qCoh.toFixed(3);
+  document.getElementById('qvc-q-pur').textContent   = pur.toFixed(3);
+  const st = qCoh>.85?'PURE':qCoh>.4?'MIXED':'MAX MIXED';
+  document.getElementById('qvc-q-state').textContent = st;
+  // Badges
+  const cBadge=document.getElementById('qvc-c-badge');
+  cBadge.textContent = qvcFlips===0?'STABLE':`${qvcFlips} FLIP${qvcFlips!==1?'S':''}`;
+  const qBadge=document.getElementById('qvc-q-badge');
+  if (qCoh>.85){qBadge.textContent='COHERENT';qBadge.style.color='#60a5fa';}
+  else if(qCoh>.4){qBadge.textContent='DECOHERING';qBadge.style.color='#fb923c';}
+  else{qBadge.textContent='DECOHERENT';qBadge.style.color='#ef4444';}
+}
+
+
+/* ════════════════════════════════════════════
+   GATE BUILDER — Full 2-qubit complex state vector simulation
+   State: [a00, a01, a10, a11] where each is {re, im}
+   Basis: |00⟩, |01⟩, |10⟩, |11⟩  (q0 ⊗ q1)
+════════════════════════════════════════════ */
+let gateInited = false;
+let gateRenderer = null;
+
+// 2-qubit state vector (complex amplitudes)
+let gbState = [ {re:1,im:0}, {re:0,im:0}, {re:0,im:0}, {re:0,im:0} ]; // |00⟩
+
+// Circuit: array of { wire: 0|1|'cnot', gate: 'H'|'X'|'Y'|'Z'|'CNOT' }
+let gbCircuit = []; // unified timeline list
+
+// ── Complex math helpers ──
+function cadd(a,b){ return {re:a.re+b.re, im:a.im+b.im}; }
+function cmul(a,b){ return {re:a.re*b.re-a.im*b.im, im:a.re*b.im+a.im*b.re}; }
+function cscale(s,a){ return {re:s*a.re, im:s*a.im}; }
+const i_c = {re:0,im:1};
+const mi_c = {re:0,im:-1};
+const R2 = 1/Math.SQRT2;
+
+// ── Apply single-qubit gate to qubit `q` (0 or 1) of 2-qubit state ──
+function applyGate1Q(state, q, gate) {
+  // Gate matrices: [[a,b],[c,d]]
+  const G = {
+    H:   [[{re:R2,im:0},{re:R2,im:0}],[{re:R2,im:0},{re:-R2,im:0}]],
+    X:   [[{re:0,im:0},{re:1,im:0}],[{re:1,im:0},{re:0,im:0}]],
+    Y:   [[{re:0,im:0},{re:0,im:-1}],[{re:0,im:1},{re:0,im:0}]],
+    Z:   [[{re:1,im:0},{re:0,im:0}],[{re:0,im:0},{re:-1,im:0}]],
+  };
+  const g = G[gate];
+  if (!g) return state;
+
+  const ns = state.map(x=>({re:x.re,im:x.im})); // copy
+
+  if (q === 0) {
+    // q0 is MSB: pairs (0,2) and (1,3)
+    for (let j=0; j<2; j++) {
+      // j=0: |0j> = index j, |1j> = index j+2
+      const a0 = state[j];
+      const a1 = state[j+2];
+      ns[j]   = cadd(cmul(g[0][0],a0), cmul(g[0][1],a1));
+      ns[j+2] = cadd(cmul(g[1][0],a0), cmul(g[1][1],a1));
+    }
+  } else {
+    // q1 is LSB: pairs (0,1) and (2,3)
+    for (let j=0; j<2; j++) {
+      // j=0: |j0> = index j*2, |j1> = index j*2+1
+      const a0 = state[j*2];
+      const a1 = state[j*2+1];
+      ns[j*2]   = cadd(cmul(g[0][0],a0), cmul(g[0][1],a1));
+      ns[j*2+1] = cadd(cmul(g[1][0],a0), cmul(g[1][1],a1));
+    }
+  }
+  return ns;
+}
+
+// ── Apply CNOT gate: q0=control, q1=target ──
+function applyCNOT(state) {
+  // CNOT flips q1 when q0=1
+  // Basis order: |00>=0, |01>=1, |10>=2, |11>=3
+  // |00>→|00>, |01>→|01>, |10>→|11>, |11>→|10>
+  return [
+    state[0], // |00>→|00>
+    state[1], // |01>→|01>
+    state[3], // |10>→|11>
+    state[2], // |11>→|10>
+  ];
+}
+
+// ── Compute probabilities ──
+function gbProbs(state) {
+  return state.map(a => a.re*a.re + a.im*a.im);
+}
+
+// ── Get reduced q0 Bloch vector from 2-qubit state ──
+// Reduced density matrix: rho_0 = Tr_1(|psi><psi|)
+// rho_0[0][0] = |a00|^2 + |a01|^2
+// rho_0[1][1] = |a10|^2 + |a11|^2
+// rho_0[0][1] = a00*conj(a10) + a01*conj(a11)
+// Bloch vector: x=2*Re(rho_0[0][1]), y=2*Im(rho_0[0][1]), z=rho_0[0][0]-rho_0[1][1]
+function gbBlochQ0(state) {
+  const a00=state[0], a01=state[1], a10=state[2], a11=state[3];
+  const r00 = a00.re*a00.re+a00.im*a00.im + a01.re*a01.re+a01.im*a01.im;
+  const r11 = a10.re*a10.re+a10.im*a10.im + a11.re*a11.re+a11.im*a11.im;
+  // rho_01 = a00*conj(a10) + a01*conj(a11)
+  const r01re = a00.re*a10.re+a00.im*a10.im + a01.re*a11.re+a01.im*a11.im;
+  const r01im = a00.im*a10.re-a00.re*a10.im + a01.im*a11.re-a01.re*a11.im;
+  return { x: 2*r01re, y: -2*r01im, z: r00-r11 };
+}
+
+// ── Get reduced q1 Bloch vector ──
+function gbBlochQ1(state) {
+  const a00=state[0], a01=state[1], a10=state[2], a11=state[3];
+  const r00 = a00.re*a00.re+a00.im*a00.im + a10.re*a10.re+a10.im*a10.im;
+  const r11 = a01.re*a01.re+a01.im*a01.im + a11.re*a11.re+a11.im*a11.im;
+  const r01re = a00.re*a01.re+a00.im*a01.im + a10.re*a11.re+a10.im*a11.im;
+  const r01im = a00.im*a01.re-a00.re*a01.im + a10.im*a11.re-a10.re*a11.im;
+  return { x: 2*r01re, y: -2*r01im, z: r00-r11 };
+}
+
+// ── Detect entanglement (Schmidt rank > 1) ──
+function isEntangled(state) {
+  const probs = gbProbs(state);
+  // Separable iff |psi> = |a>|b>, i.e. a00*a11 = a01*a10
+  const lhs_re = state[0].re*state[3].re - state[0].im*state[3].im;
+  const lhs_im = state[0].re*state[3].im + state[0].im*state[3].re;
+  const rhs_re = state[1].re*state[2].re - state[1].im*state[2].im;
+  const rhs_im = state[1].re*state[2].im + state[1].im*state[2].re;
+  const diff = Math.hypot(lhs_re-rhs_re, lhs_im-rhs_im);
+  return diff > 0.01;
+}
+
+// ── Get state name from Bloch angles ──
+function gbStateName(bv) {
+  const {x,y,z} = bv;
+  const r = Math.hypot(x,y,z);
+  if (r < 0.05) return '|mixed⟩';
+  const theta = Math.acos(Math.max(-1,Math.min(1,z/r)));
+  const phi   = Math.atan2(y,x);
+  const eps = 0.06;
+  if (theta < eps) return '|0⟩';
+  if (theta > Math.PI-eps) return '|1⟩';
+  if (Math.abs(theta-Math.PI/2) < eps) {
+    const p = ((phi%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+    if (p < eps || p > 2*Math.PI-eps) return '|+⟩';
+    if (Math.abs(p-Math.PI) < eps) return '|−⟩';
+    if (Math.abs(p-Math.PI/2) < eps) return '|i⟩';
+    if (Math.abs(p-3*Math.PI/2) < eps) return '|−i⟩';
+  }
+  return `|ψ⟩`;
+}
+
+// ── Gate matrix display ──
+const GB_MATRICES = {
+  H:    `⎡<span class="mv">1/√2</span>  <span class="mv"> 1/√2</span>⎤<br>⎣<span class="mv">1/√2</span>  <span class="mv">−1/√2</span>⎦`,
+  X:    `⎡<span class="mv">0</span>  <span class="mv">1</span>⎤<br>⎣<span class="mv">1</span>  <span class="mv">0</span>⎦`,
+  Y:    `⎡<span class="mv"> 0</span>  <span class="mv">−i</span>⎤<br>⎣<span class="mv">+i</span>  <span class="mv"> 0</span>⎦`,
+  Z:    `⎡<span class="mv">1</span>  <span class="mv"> 0</span>⎤<br>⎣<span class="mv">0</span>  <span class="mv">−1</span>⎦`,
+  CNOT: `⎡<span class="mv">1 0 0 0</span>⎤<br>⎢<span class="mv">0 1 0 0</span>⎥<br>⎢<span class="mv">0 0 0 1</span>⎥<br>⎣<span class="mv">0 0 1 0</span>⎦`,
+};
+
+const GB_GATE_COLORS = { H:'#3b82f6', X:'#ef4444', Y:'#22c55e', Z:'#a78bfa', CNOT:'#eab308' };
+
+// ── Drag-and-drop handlers ──
+function gbDragStart(e, name) {
+  e.dataTransfer.setData('text/plain', name);
+  e.dataTransfer.effectAllowed = 'copy';
+}
+
+function gbDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function gbDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function gbDrop(e, wire) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const name = e.dataTransfer.getData('text/plain');
+  if (!name) return;
+
+  // CNOT only on q0 wire (wire=0)
+  if (name === 'CNOT' && wire === 1) {
+    // Flash a message instead of alert
+    const hint = document.getElementById('gb-hint-q1');
+    if (hint) { hint.style.display=''; hint.textContent='⚠ CNOT must go on q₀!'; hint.style.color='#ef4444'; setTimeout(()=>{hint.style.color='';hint.textContent='← drag gates here (not CNOT)';gbRefreshHints();},1800); }
+    return;
+  }
+
+  gbCircuit.push({ wire, gate: name });
+  gbRenderChips();
+}
+
+function gbRefreshHints() {
+  const q0gates = gbCircuit.filter(c=>c.wire===0||c.gate==='CNOT');
+  const q1gates = gbCircuit.filter(c=>c.wire===1);
+  const h0=document.getElementById('gb-hint-q0'), h1=document.getElementById('gb-hint-q1');
+  if(h0) h0.style.display = q0gates.length ? 'none' : '';
+  if(h1) h1.style.display = q1gates.length ? 'none' : '';
+}
+
+function gbRenderChips() {
+  // Clear all existing chips from both wires
+  ['gb-drop-q0','gb-drop-q1'].forEach(id=>{
+    const zone=document.getElementById(id);
+    if(zone) zone.querySelectorAll('.gb-chip').forEach(c=>c.remove());
+  });
+
+  // Re-render all chips in order
+  gbCircuit.forEach((op, idx) => {
+    const zoneId = (op.wire===0 || op.gate==='CNOT') ? 'gb-drop-q0' : 'gb-drop-q1';
+    const zone = document.getElementById(zoneId);
+    if (!zone) return;
+
+    const chip = document.createElement('div');
+    chip.className = 'gb-chip' + (op.gate==='CNOT'?' cnot-ctrl':'');
+    chip.style.background = GB_GATE_COLORS[op.gate] || '#475569';
+
+    // CNOT gets special symbol
+    const sym = op.gate === 'CNOT' ? '⊕' : op.gate;
+    const sub = op.gate === 'CNOT' ? 'ctrl→q₁' : '';
+    chip.innerHTML = `${sym}${sub?`<div class="chip-sub">${sub}</div>`:''}<div class="gb-remove" onclick="gbRemove(${idx})">×</div>`;
+    zone.appendChild(chip);
+
+    // Also put CNOT target symbol on q1 wire
+    if (op.gate === 'CNOT') {
+      const zone1 = document.getElementById('gb-drop-q1');
+      if (zone1) {
+        const tgt = document.createElement('div');
+        tgt.className = 'gb-chip cnot-tgt';
+        tgt.style.background = 'transparent';
+        tgt.style.border = '2px solid #eab308';
+        tgt.style.color = '#eab308';
+        tgt.setAttribute('data-cnot-tgt', idx);
+        tgt.innerHTML = '⊕<div class="chip-sub" style="color:#eab308;">tgt</div>';
+        zone1.appendChild(tgt);
+      }
+    }
+  });
+
+  gbRefreshHints();
+}
+
+function gbRemove(idx) {
+  gbCircuit.splice(idx, 1);
+  gbRenderChips();
+  // Reset state and re-run if circuit is now empty
+  if (gbCircuit.length === 0) gbReset();
+}
+
+function gbReset() {
+  gbState = [{re:1,im:0},{re:0,im:0},{re:0,im:0},{re:0,im:0}];
+  gbUpdateDisplay([]);
+}
+
+function gbClear() {
+  gbCircuit = [];
+  gbRenderChips();
+  gbReset();
+  document.getElementById('gb-step-log').style.display='none';
+  document.getElementById('gb-measure').textContent='Press ▶ RUN to simulate and see outcome';
+}
+
+function gbRun() {
+  // Start from |00⟩
+  let state = [{re:1,im:0},{re:0,im:0},{re:0,im:0},{re:0,im:0}];
+  const stepLog = [];
+
+  // Process circuit in order (each op has wire + gate)
+  gbCircuit.forEach((op, idx) => {
+    let desc = '';
+    if (op.gate === 'CNOT') {
+      state = applyCNOT(state);
+      desc = 'CNOT: if q₀=|1⟩, flip q₁';
+    } else {
+      state = applyGate1Q(state, op.wire, op.gate);
+      desc = `${op.gate} on q${op.wire}`;
+    }
+    const probs = gbProbs(state);
+    const bv0 = gbBlochQ0(state);
+    const bv1 = gbBlochQ1(state);
+    const r0 = Math.hypot(bv0.x,bv0.y,bv0.z);
+    const th0 = r0<1e-6?0:Math.acos(Math.max(-1,Math.min(1,bv0.z/r0)));
+    const ph0 = Math.atan2(bv0.y,bv0.x);
+    stepLog.push({
+      gate: op.gate,
+      wire: op.wire,
+      desc,
+      probs,
+      stateName0: gbStateName(bv0),
+      stateName1: gbStateName(bv1),
+      theta: th0, phi: ph0,
+      entangled: isEntangled(state),
+    });
+  });
+
+  gbState = state;
+  gbUpdateDisplay(stepLog);
+  gbRenderStepLog(stepLog);
+}
+
+function gbUpdateDisplay(stepLog) {
+  const state = gbState;
+  const probs = gbProbs(state);
+  const bv0 = gbBlochQ0(state);
+  const bv1 = gbBlochQ1(state);
+  const r0 = Math.hypot(bv0.x,bv0.y,bv0.z);
+  const theta0 = r0<1e-6?0:Math.acos(Math.max(-1,Math.min(1,bv0.z/r0)));
+  const phi0   = Math.atan2(bv0.y,bv0.x);
+  const entangled = isEntangled(state);
+
+  // Angles readout
+  document.getElementById('gb-theta').textContent = (theta0*180/Math.PI).toFixed(1)+'°';
+  document.getElementById('gb-phi').textContent   = (((phi0*180/Math.PI)%360+360)%360).toFixed(1)+'°';
+  document.getElementById('gb-state-name').textContent = gbStateName(bv0);
+  document.getElementById('gb-q1-state').textContent   = gbStateName(bv1);
+
+  // Badge: show dominant basis state
+  const maxIdx = probs.indexOf(Math.max(...probs));
+  const names = ['|00⟩','|01⟩','|10⟩','|11⟩'];
+  const badge = document.getElementById('gb-badge');
+  badge.textContent = entangled ? 'ENTANGLED' : names[maxIdx];
+  badge.style.background = entangled ? 'rgba(251,191,36,.15)' : 'rgba(167,139,250,.12)';
+  badge.style.color = entangled ? '#fbbf24' : '#a78bfa';
+  badge.style.borderColor = entangled ? 'rgba(251,191,36,.3)' : 'rgba(167,139,250,.25)';
+
+  // Entanglement indicator
+  const entEl = document.getElementById('gb-entangle');
+  entEl.classList.toggle('on', entangled);
+
+  // Probability bars
+  const ids = ['00','01','10','11'];
+  const barColors = ['#3b82f6','#ef4444','#22c55e','#a78bfa'];
+  ids.forEach((id,i) => {
+    const pct = probs[i]*100;
+    document.getElementById('p'+id).textContent = pct.toFixed(1)+'%';
+    const bar = document.getElementById('bar'+id);
+    bar.style.width = pct.toFixed(1)+'%';
+    bar.style.background = barColors[i];
+  });
+
+  // Matrix for last gate
+  const lastOp = gbCircuit[gbCircuit.length-1];
+  if (lastOp) {
+    const matHTML = GB_MATRICES[lastOp.gate] || 'n/a';
+    const col = GB_GATE_COLORS[lastOp.gate]||'#60a5fa';
+    document.getElementById('gb-matrix-content').innerHTML =
+      `<div style="color:${col};font-weight:700;margin-bottom:6px;">${lastOp.gate} gate (${lastOp.gate==='CNOT'?'4×4':'2×2'})</div>${matHTML}`;
+  } else {
+    document.getElementById('gb-matrix-content').textContent = 'No gate applied yet';
+  }
+
+  // Measurement outcome
+  if (gbCircuit.length > 0) {
+    const p0 = (probs[0]+probs[1])*100;
+    const p1 = (probs[2]+probs[3])*100;
+    const q1_0 = (probs[0]+probs[2])*100;
+    const q1_1 = (probs[1]+probs[3])*100;
+    document.getElementById('gb-measure').innerHTML =
+      `q₀: <b style="color:#a78bfa">|0⟩ ${p0.toFixed(1)}%</b> / <b style="color:#a78bfa">|1⟩ ${p1.toFixed(1)}%</b> &nbsp;&nbsp; ` +
+      `q₁: <b style="color:#fbbf24">|0⟩ ${q1_0.toFixed(1)}%</b> / <b style="color:#fbbf24">|1⟩ ${q1_1.toFixed(1)}%</b>`;
+  }
+}
+
+function gbRenderStepLog(steps) {
+  if (!steps.length) { document.getElementById('gb-step-log').style.display='none'; return; }
+  document.getElementById('gb-step-log').style.display='block';
+  const col = g => GB_GATE_COLORS[g]||'#60a5fa';
+  document.getElementById('gb-step-rows').innerHTML = steps.map((s,i)=>`
+    <div class="gb-step-row">
+      <span class="gb-step-gate" style="color:${col(s.gate)}">${s.gate}</span>
+      <span class="gb-step-info">
+        <b>${s.desc}</b><br>
+        q₀→${s.stateName0}  q₁→${s.stateName1}
+        &nbsp; θ=${(s.theta*180/Math.PI).toFixed(1)}°
+        &nbsp; P(00)=${(s.probs[0]*100).toFixed(1)}% P(01)=${(s.probs[1]*100).toFixed(1)}% P(10)=${(s.probs[2]*100).toFixed(1)}% P(11)=${(s.probs[3]*100).toFixed(1)}%
+        ${s.entangled?'<br><b style="color:#fbbf24">⚡ State is entangled</b>':''}
+      </span>
+    </div>`).join('');
+}
+
+function initGate() {
+  if (gateInited) return;
+  gateInited = true;
+
+  const canvas = document.getElementById('gate-canvas');
+  if (!canvas) return;
+  gateRenderer = new BlochRenderer(canvas, 108, { autoSpeed: 0.006 });
+  gbReset();
+  gbRefreshHints();
+
+  function gateLoop() {
+    if (!document.getElementById('gate-page').classList.contains('active')) {
+      requestAnimationFrame(gateLoop); return;
+    }
+    const bv = gbBlochQ0(gbState);
+    gateRenderer.render(bv.x, bv.y, bv.z, 0, '#c084fc', '#a78bfa');
+    requestAnimationFrame(gateLoop);
+  }
+  requestAnimationFrame(gateLoop);
+}
+
+/* Init */
+document.addEventListener('DOMContentLoaded', () => {});
+
 </script>
 </body>
 </html>

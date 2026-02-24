@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum Fragility Playground | Virtual Lab</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{background-color:#0a0a0c;color:#e2e8f0;font-family:'Inter',sans-serif;margin:0;}
+
+  /* ── shared ── */
+  .glass-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);transition:all .3s ease;}
+  .glass-card:hover{border-color:rgba(96,165,250,.3);background:rgba(255,255,255,.05);transform:translateY(-4px);}
+  .nav-link:hover{color:#60a5fa;}
+  .btn-primary{background:white;color:black;font-weight:600;padding:.75rem 1.5rem;border-radius:.5rem;transition:transform .2s;}
+  .btn-primary:hover{transform:translateY(-2px);background:#f1f5f9;}
+  .btn-secondary{border:1px solid rgba(255,255,255,.2);padding:.75rem 1.5rem;border-radius:.5rem;transition:all .2s;}
+  .btn-secondary:hover{background:rgba(255,255,255,.05);}
+  .dropdown-content{opacity:0;visibility:hidden;position:absolute;top:100%;left:-10px;min-width:220px;background:#111114;border:1px solid rgba(255,255,255,.1);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.6);padding:8px 0;z-index:100;transform:translateY(10px);transition:all .2s ease-in-out;}
+  .group:hover .dropdown-content{opacity:1;visibility:visible;transform:translateY(0);}
+  .dropdown-item{padding:10px 20px;color:#94a3b8;font-size:.85rem;transition:all .2s;display:block;white-space:nowrap;}
+  .dropdown-item:hover{background:rgba(255,255,255,.05);color:#60a5fa;}
+  .tag{display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.05em;padding:3px 10px;border-radius:4px;text-transform:uppercase;background:rgba(59,130,246,.1);color:#60a5fa;}
+
+  /* ── PAGE ROUTING ── */
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* ── HOME sphere ── */
+  #sphere-container{position:relative;width:420px;height:420px;flex-shrink:0;}
+  #bloch-canvas{display:block;border-radius:50%;cursor:grab;border:1px solid rgba(59,130,246,.18);box-shadow:0 0 50px rgba(37,99,235,.28),0 0 100px rgba(37,99,235,.13);}
+  #bloch-canvas:active{cursor:grabbing;}
+  .alabel{position:absolute;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:rgba(148,163,184,.60);pointer-events:none;user-select:none;line-height:1;}
+  .readout{margin-top:28px;padding:14px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);font-family:'JetBrains Mono',monospace;font-size:11px;color:#64748b;line-height:1.8;}
+  .readout .val{color:#60a5fa;}
+
+  /* ── LAB PAGE ── */
+  #lab-page{background:#0a0a0c;min-height:100vh;}
+  .lab-layout{display:grid;grid-template-columns:260px 1fr 220px;gap:0;min-height:calc(100vh - 56px);}
+
+  /* Left panel */
+  .lab-left{padding:20px 16px;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto;}
+  .panel-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin-bottom:14px;}
+  .noise-row{margin-bottom:12px;}
+  .noise-label{font-size:11px;color:#94a3b8;font-family:'JetBrains Mono',monospace;margin-bottom:4px;display:flex;justify-content:space-between;}
+  .noise-val{color:#60a5fa;}
+  input[type=range]{width:100%;height:3px;appearance:none;background:#1e293b;border-radius:99px;outline:none;cursor:pointer;}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:#60a5fa;box-shadow:0 0 6px rgba(96,165,250,.6);cursor:pointer;}
+  .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .preset-btn{padding:8px 4px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.03);color:#94a3b8;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;text-align:center;}
+  .preset-btn:hover{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.07);}
+  .btn-orange{background:#ea580c;color:white;border:none;padding:10px;border-radius:6px;width:100%;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-bottom:6px;}
+  .btn-orange:hover{background:#f97316;}
+  .btn-ghost{background:transparent;color:#64748b;border:none;width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;padding:6px;transition:color .2s;}
+  .btn-ghost:hover{color:#94a3b8;}
+  .state-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .state-btn{padding:9px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.03);color:#94a3b8;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s;text-align:center;}
+  .state-btn:hover,.state-btn.active{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.1);}
+  .state-btn.active{background:rgba(59,130,246,.2);}
+
+  /* Center panel */
+  .lab-center{display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06);}
+  .sphere-area{position:relative;flex:0 0 auto;padding:16px;display:flex;flex-direction:column;align-items:center;border-bottom:1px solid rgba(255,255,255,.06);}
+  .sphere-topbar{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .state-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 12px;border-radius:4px;text-transform:uppercase;}
+  .badge-coherent{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.25);}
+  .badge-mixed{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+  .badge-noisy{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.25);}
+  #pause-btn{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border:1px solid rgba(255,255,255,.15);border-radius:4px;background:transparent;color:#64748b;cursor:pointer;text-transform:uppercase;transition:all .2s;}
+  #pause-btn:hover{border-color:#60a5fa;color:#60a5fa;}
+
+  #lab-canvas{display:block;border-radius:50%;cursor:grab;border:1px solid rgba(59,130,246,.2);box-shadow:0 0 40px rgba(37,99,235,.22),0 0 80px rgba(37,99,235,.10);}
+  #lab-canvas:active{cursor:grabbing;}
+
+  /* Graph area */
+  .graph-area{padding:12px 16px;flex:1;}
+  .graph-legend{display:flex;gap:16px;margin-bottom:8px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+  .legend-dot{width:8px;height:8px;border-radius:50%;}
+  #graph-canvas{width:100%;height:90px;display:block;}
+  #fidelity-bar-canvas{width:100%;height:22px;display:block;margin-top:6px;}
+
+  /* Right panel */
+  .lab-right{padding:20px 14px;overflow-y:auto;}
+  .stat-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.04);}
+  .stat-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:#475569;text-transform:uppercase;letter-spacing:.08em;}
+  .stat-val{font-size:16px;font-family:'JetBrains Mono',monospace;font-weight:700;color:#e2e8f0;}
+  .stat-val.green{color:#22c55e;}
+  .stat-val.yellow{color:#eab308;}
+  .stat-val.red{color:#ef4444;}
+
+  .filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
+  .filter-btn{padding:6px 4px;border:1px solid rgba(255,255,255,.1);border-radius:5px;background:rgba(255,255,255,.03);color:#64748b;font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;text-align:center;}
+  .filter-btn:hover,.filter-btn.active{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.08);}
+  .snap-item{padding:8px 10px;border:1px solid rgba(255,255,255,.06);border-radius:6px;background:rgba(255,255,255,.02);margin-bottom:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#475569;}
+  .snap-item .snap-label{color:#94a3b8;font-size:10px;margin-bottom:2px;}
+
+  /* lab header breadcrumb */
+  .lab-header{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
+  .lab-header h1{font-size:18px;font-weight:800;letter-spacing:-.02em;}
+  .lab-header p{font-size:11px;color:#64748b;margin-left:16px;}
+  .lab-icon{width:28px;height:28px;background:rgba(34,197,94,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+
+  /* divider */
+  .section-divider{height:1px;background:rgba(255,255,255,.05);margin:14px 0;}
+</style>
+</head>
+<body class="selection:bg-blue-500/30">
+
+<!-- ════════════════════════════════════════
+     SHARED NAV
+════════════════════════════════════════ -->
+<nav id="main-nav" class="flex items-center justify-between px-12 py-3.5 border-b border-white/5 bg-[#0a0a0c]/95 backdrop-blur-md sticky top-0 z-50">
+  <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('home')">
+    <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white">Q</div>
+    <div>
+      <span class="text-base font-extrabold tracking-tight">QFragility</span>
+      <div class="text-[9px] text-slate-600 font-mono tracking-widest uppercase -mt-0.5">Virtual Quantum Lab</div>
+    </div>
+  </div>
+
+  <div class="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wide text-slate-400">
+    <a href="#" class="nav-link text-white transition-colors" onclick="showPage('home');return false;">HOME</a>
+    <div class="group relative">
+      <button class="nav-link flex items-center gap-1.5 py-2 uppercase">Labs <span class="text-[10px] opacity-50">▼</span></button>
+      <div class="dropdown-content">
+        <a href="#" class="dropdown-item" onclick="showPage('lab');return false;">🧪 Fragility Lab</a>
+        <a href="#" class="dropdown-item">⚖️ Quantum vs Classical</a>
+        <a href="#" class="dropdown-item">🔧 Gate Builder</a>
+      </div>
+    </div>
+    <div class="group relative">
+      <button class="nav-link flex items-center gap-1.5 py-2 uppercase">Visualizers <span class="text-[10px] opacity-50">▼</span></button>
+      <div class="dropdown-content">
+        <a href="#" class="dropdown-item">Qiskit Visualizer</a>
+        <a href="#" class="dropdown-item">QASM Visualizer</a>
+      </div>
+    </div>
+    <div class="group relative">
+      <button class="nav-link flex items-center gap-1.5 py-2 uppercase">Experiments <span class="text-[10px] opacity-50">▼</span></button>
+      <div class="dropdown-content">
+        <a href="#" class="dropdown-item">Stern – Gerlach</a>
+        <a href="#" class="dropdown-item">Cavity QED</a>
+        <a href="#" class="dropdown-item">Bell State</a>
+      </div>
+    </div>
+    <a href="#" class="nav-link py-2 uppercase">Learn</a>
+    <a href="#" class="nav-link py-2 uppercase">About</a>
+  </div>
+
+  <div class="text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 px-3 py-1.5 rounded-full border border-blue-400/20">
+    HACKNOVA 2.0 LIVE
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════
+     HOME PAGE
+════════════════════════════════════════ -->
+<div id="home-page" class="page active">
+  <main class="max-w-6xl mx-auto px-6 pt-24 pb-12 text-center">
+    <h1 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-[1.1]">Quantum Fragility<br/>Playground</h1>
+    <p class="text-slate-400 text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+      A high-fidelity virtual lab for exploring the delicate nature of quantum bits. Observe decoherence, master quantum gates, and build the future.
+    </p>
+    <div class="flex justify-center gap-5 mb-20">
+      <button class="btn-primary" onclick="showPage('lab')">START FRAGILITY LAB</button>
+      <button class="btn-secondary">RUN EXPERIMENTS</button>
+    </div>
+    <div class="flex justify-center gap-20 mb-24 border-y border-white/5 py-10">
+      <div class="text-center"><div class="text-4xl font-bold">7</div><div class="text-[10px] tracking-widest text-slate-500 uppercase mt-1 font-semibold">Noise Channels</div></div>
+      <div class="text-center"><div class="text-4xl font-bold">9</div><div class="text-[10px] tracking-widest text-slate-500 uppercase mt-1 font-semibold">Quantum Gates</div></div>
+      <div class="text-center"><div class="text-4xl font-bold">5</div><div class="text-[10px] tracking-widest text-slate-500 uppercase mt-1 font-semibold">Experiments</div></div>
+    </div>
+  </main>
+
+  <section class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center mb-40">
+    <div class="text-left">
+      <span class="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4 block font-bold">The Science</span>
+      <h2 class="text-4xl font-bold mb-6">What is quantum fragility?</h2>
+      <p class="text-slate-400 mb-5 leading-relaxed">Unlike classical bits that are robustly 0 or 1, qubits are extremely delicate. Interaction with the environment causes <strong class="text-slate-200">decoherence</strong>, where quantum superposition and entanglement are lost to thermal noise and background radiation.</p>
+      <p class="text-slate-400 mb-8 leading-relaxed">In this playground, you can simulate depolarizing, phase-flip, bit-flip, and amplitude damping noise to see how they shrink the Bloch vector.</p>
+      <a href="#" class="text-blue-400 border-b-2 border-blue-400/20 pb-1 hover:border-blue-400 hover:text-blue-300 transition-all font-semibold">Learn more about the physics →</a>
+      <div class="readout">
+        <div style="color:#475569;font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;">Live State Vector</div>
+        <div>θ = <span class="val" id="h-theta">45.0°</span></div>
+        <div>φ = <span class="val" id="h-phi">0.0°</span></div>
+        <div style="margin-top:4px;color:#334155;">|ψ⟩ = cos(θ/2)|0⟩ + e<sup style="font-size:8px">iφ</sup>sin(θ/2)|1⟩</div>
+      </div>
+    </div>
+    <div class="flex justify-center items-center">
+      <div id="sphere-container">
+        <canvas id="bloch-canvas" width="420" height="420"></canvas>
+        <span class="alabel" style="top:4px;left:50%;transform:translateX(-50%)">|0⟩</span>
+        <span class="alabel" style="bottom:4px;left:50%;transform:translateX(-50%)">|1⟩</span>
+        <span class="alabel" style="top:50%;right:2px;transform:translateY(-50%)">|+⟩</span>
+        <span class="alabel" style="top:50%;left:2px;transform:translateY(-50%)">|−⟩</span>
+        <span class="alabel" style="bottom:12px;right:14px;font-size:9px;color:rgba(71,85,105,.4)">drag · rotate</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-6xl mx-auto px-6 mb-32">
+    <div class="mb-14 text-center">
+      <h2 class="text-3xl font-bold">Explore the Playground</h2>
+      <p class="text-slate-500 mt-2 text-sm">Navigate through our specialized modules designed to take you from a curious student to a quantum pioneer.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="glass-card p-8 rounded-2xl flex flex-col h-full cursor-pointer" onclick="showPage('lab')">
+        <div class="w-10 h-10 bg-green-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">🧪</div>
+        <h3 class="text-xl font-bold mb-3">Fragility Lab</h3>
+        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Interact with 4 core noise channels and observe decoherence in real-time with 3D visuals and live graphs.</p>
+        <div class="flex gap-2 flex-wrap"><span class="tag">FEATURED</span><span class="tag" style="background:rgba(168,85,247,.1);color:#c084fc;">LABORATORY</span></div>
+      </div>
+      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
+        <div class="w-10 h-10 bg-slate-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">⚖️</div>
+        <h3 class="text-xl font-bold mb-3">Q vs C</h3>
+        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Compare the stability of classical bits against the fragility of quantum qubits under identical noise.</p>
+        <div class="flex gap-2"><span class="tag">COMPARISON</span></div>
+      </div>
+      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
+        <div class="w-10 h-10 bg-orange-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">🔧</div>
+        <h3 class="text-xl font-bold mb-3">Gate Builder</h3>
+        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Drag-and-drop gates to build circuits and watch the Bloch vector rotate through transformations.</p>
+        <div class="flex gap-2"><span class="tag" style="background:rgba(249,115,22,.1);color:#fb923c;">BUILDER</span></div>
+      </div>
+      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
+        <div class="w-10 h-10 bg-blue-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">🔬</div>
+        <h3 class="text-xl font-bold mb-3">Experiments</h3>
+        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Run Stern-Gerlach, Bell State, Cavity QED, Deutsch-Jozsa and Ramsey Interferometry on our virtual backend.</p>
+        <div class="flex gap-2"><span class="tag">ACADEMIC</span></div>
+      </div>
+      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
+        <div class="w-10 h-10 bg-emerald-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">📊</div>
+        <h3 class="text-xl font-bold mb-3">Visualizers</h3>
+        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">Visualize Qiskit and QASM circuit outputs with step-by-step state evolution and probability distributions.</p>
+        <div class="flex gap-2"><span class="tag" style="background:rgba(16,185,129,.1);color:#34d399;">VISUALIZATION</span></div>
+      </div>
+      <div class="glass-card p-8 rounded-2xl flex flex-col h-full">
+        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg mb-6 flex items-center justify-center text-xl">📚</div>
+        <h3 class="text-xl font-bold mb-3">Learn</h3>
+        <p class="text-slate-500 text-sm mb-8 leading-relaxed flex-grow">New to Quantum? Follow our course and test your knowledge with interactive quizzes and visual guides.</p>
+        <div class="flex gap-2"><span class="tag" style="background:rgba(234,179,8,.1);color:#facc15;">EDUCATION</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-white/5 py-16 text-center text-slate-600 text-[10px] font-mono tracking-widest uppercase">
+    &copy; 2026 QFRAGILITY VIRTUAL LAB | PHYSICALLY INSPIRED & TECHNICALLY DRIVEN
+  </footer>
+</div><!-- /home-page -->
+
+
+<!-- ════════════════════════════════════════
+     FRAGILITY LAB PAGE
+════════════════════════════════════════ -->
+<div id="lab-page" class="page">
+  <!-- Lab header -->
+  <div class="lab-header">
+    <div class="lab-icon">🧪</div>
+    <h1>Fragility Lab</h1>
+    <p>Explore how environmental interactions destroy quantum coherence through real-time noise simulation.</p>
+  </div>
+
+  <div class="lab-layout">
+
+    <!-- ── LEFT: Noise Channels + Presets + Initial State ── -->
+    <div class="lab-left">
+
+      <div class="panel-title">Noise Channels</div>
+
+      <!-- Depolarizing -->
+      <div class="noise-row">
+        <div class="noise-label"><span>DEPOLARIZING</span><span class="noise-val" id="v-depol">0%</span></div>
+        <input type="range" min="0" max="100" value="0" id="s-depol" oninput="updateNoise()">
+      </div>
+      <!-- Phase Flip -->
+      <div class="noise-row">
+        <div class="noise-label"><span>PHASE FLIP</span><span class="noise-val" id="v-phase">0%</span></div>
+        <input type="range" min="0" max="100" value="0" id="s-phase" oninput="updateNoise()">
+      </div>
+      <!-- Bit Flip -->
+      <div class="noise-row">
+        <div class="noise-label"><span>BIT FLIP</span><span class="noise-val" id="v-bit">0%</span></div>
+        <input type="range" min="0" max="100" value="0" id="s-bit" oninput="updateNoise()">
+      </div>
+      <!-- Amplitude Damping -->
+      <div class="noise-row">
+        <div class="noise-label"><span>AMP. DAMPING (T₁)</span><span class="noise-val" id="v-amp">1%</span></div>
+        <input type="range" min="0" max="100" value="1" id="s-amp" oninput="updateNoise()">
+      </div>
+      <div class="section-divider"></div>
+
+      <div class="panel-title">Presets</div>
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="applyPreset('clean')">CLEAN</button>
+        <button class="preset-btn" onclick="applyPreset('noisy')">NOISY</button>
+        <button class="preset-btn" onclick="applyPreset('t1only')">T₁ ONLY</button>
+        <button class="preset-btn" onclick="applyPreset('phase')">PHASE</button>
+      </div>
+      <button class="btn-orange" onclick="applyPreset('pause')">⏸ PAUSE</button>
+      <button class="btn-ghost" onclick="resetState()">↺ RESET STATE</button>
+
+      <div class="section-divider"></div>
+
+      <div class="panel-title">Initial State</div>
+      <div class="state-btns">
+        <button class="state-btn active" id="sb-0" onclick="setInitState(0)">|0⟩</button>
+        <button class="state-btn" id="sb-1" onclick="setInitState(1)">|1⟩</button>
+        <button class="state-btn" id="sb-plus" onclick="setInitState(2)">|+⟩</button>
+        <button class="state-btn" id="sb-minus" onclick="setInitState(3)">|−⟩</button>
+      </div>
+
+    </div><!-- /lab-left -->
+
+    <!-- ── CENTER: Bloch Sphere + Graph ── -->
+    <div class="lab-center">
+      <div class="sphere-area">
+        <div class="sphere-topbar">
+          <span class="state-badge badge-coherent" id="coherence-badge">COHERENT STATE</span>
+          <button id="pause-btn" onclick="togglePause()">⏸ Pause</button>
+        </div>
+        <canvas id="lab-canvas" width="340" height="340"></canvas>
+      </div>
+
+      <!-- Graph -->
+      <div class="graph-area">
+        <div class="graph-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div><span style="color:#60a5fa">COHERENCE |R|</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div><span style="color:#f87171">X COMPONENT</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div><span style="color:#4ade80">Y COMPONENT</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div><span style="color:#a78bfa">Z COMPONENT</span></div>
+        </div>
+        <canvas id="graph-canvas"></canvas>
+        <canvas id="fidelity-bar-canvas"></canvas>
+      </div>
+    </div><!-- /lab-center -->
+
+    <!-- ── RIGHT: Live Statistics + Snapshots ── -->
+    <div class="lab-right">
+      <div class="panel-title" style="margin-bottom:18px;">Live Statistics</div>
+
+      <div class="stat-row">
+        <div>
+          <div class="stat-label">COHERENCE |R|</div>
+        </div>
+        <div class="stat-val green" id="stat-coh">1.000</div>
+      </div>
+      <div class="stat-row">
+        <div><div class="stat-label">PURITY Tr(ρ²)</div></div>
+        <div class="stat-val green" id="stat-pur">1.000</div>
+      </div>
+      <div class="stat-row">
+        <div><div class="stat-label">Z PROBABILITY</div></div>
+        <div class="stat-val yellow" id="stat-z">0.500</div>
+      </div>
+      <div class="stat-row" style="border:none;margin-bottom:6px;">
+        <div><div class="stat-label">FIDELITY</div></div>
+        <div class="stat-val green" id="stat-fid">1.000</div>
+      </div>
+
+      <div class="section-divider"></div>
+      <div class="panel-title">Graph Filters</div>
+      <div class="filter-grid">
+        <button class="filter-btn active" onclick="toggleFilter('coh',this)">MIXED</button>
+        <button class="filter-btn" onclick="toggleFilter('x',this)">X</button>
+        <button class="filter-btn" onclick="toggleFilter('y',this)">Y</button>
+        <button class="filter-btn" onclick="toggleFilter('z',this)">Z</button>
+      </div>
+
+      <div class="section-divider"></div>
+      <div class="panel-title">Snapshots</div>
+      <div id="snapshots-list">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#334155;text-align:center;padding:20px 0;">No snapshots yet.<br>Double-click sphere to capture.</div>
+      </div>
+      <button class="btn-ghost" style="margin-top:6px;" onclick="takeSnapshot()">+ TAKE SNAPSHOT</button>
+
+    </div><!-- /lab-right -->
+  </div><!-- /lab-layout -->
+
+  <div style="border-top:1px solid rgba(255,255,255,.04);padding:10px 20px;display:flex;gap:20px;justify-content:center;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">REACT</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">TYPESCRIPT</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">THREE.JS</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#1e293b;text-transform:uppercase;letter-spacing:.12em;">TAILWIND</span>
+  </div>
+</div><!-- /lab-page -->
+
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+/* ── Page routing ── */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(name === 'lab' ? 'lab-page' : 'home-page').classList.add('active');
+  if (name === 'lab') { setTimeout(initLabCanvas, 60); }
+}
+
+/* ══════════════════════════════════════════
+   HOME BLOCH SPHERE (pure canvas, elegant)
+══════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('bloch-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=420,H=420,cx=210,cy=210,R=165;
+  let rotX=0.30,rotY=0,dragging=false,lastMX=0,lastMY=0;
+
+  canvas.addEventListener('mousedown',e=>{dragging=true;lastMX=e.clientX;lastMY=e.clientY;});
+  window.addEventListener('mouseup',()=>dragging=false);
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    rotY+=(e.clientX-lastMX)*.012; rotX+=(e.clientY-lastMY)*.012;
+    rotX=Math.max(-1.4,Math.min(1.4,rotX)); lastMX=e.clientX;lastMY=e.clientY;
+  });
+
+  function proj(x,y,z){
+    const cosX=Math.cos(rotX),sinX=Math.sin(rotX);
+    const y1=y*cosX-z*sinX, z1=y*sinX+z*cosX;
+    const cosY=Math.cos(rotY),sinY=Math.sin(rotY);
+    const x2=x*cosY+z1*sinY, z2=-x*sinY+z1*cosY;
+    const d=900,s=d/(d+z2+R);
+    return{sx:cx+x2*s,sy:cy-y1*s,depth:z2};
+  }
+
+  function circle3D(nx,ny,nz,r,col,alpha,lw){
+    let ax,ay,az;
+    if(Math.abs(nx)<.9){ax=0;ay=-nz;az=ny;}else{ax=-ny;ay=nx;az=0;}
+    const la=Math.hypot(ax,ay,az);ax/=la;ay/=la;az/=la;
+    const bx=ny*az-nz*ay,by=nz*ax-nx*az,bz=nx*ay-ny*ax;
+    const N=100;
+    ctx.save();ctx.beginPath();
+    for(let i=0;i<=N;i++){const a=(i/N)*Math.PI*2,c=Math.cos(a)*r,s=Math.sin(a)*r;const p=proj(c*ax+s*bx,c*ay+s*by,c*az+s*bz);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
+  }
+
+  function latRing(yOff,col,alpha,lw){
+    const r=Math.sqrt(Math.max(0,R*R-yOff*yOff));if(r<1)return;
+    ctx.save();ctx.beginPath();
+    for(let i=0;i<=100;i++){const a=(i/100)*Math.PI*2;const p=proj(Math.cos(a)*r,yOff,Math.sin(a)*r);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
+  }
+
+  function line3D(x1,y1,z1,x2,y2,z2,col,alpha,lw,dashed){
+    const a=proj(x1,y1,z1),b=proj(x2,y2,z2);
+    ctx.save();ctx.beginPath();if(dashed)ctx.setLineDash([4,6]);
+    ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);
+    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
+  }
+
+  function dot3D(x,y,z,r,col,alpha){
+    const p=proj(x,y,z);ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(p.sx,p.sy,r,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.restore();
+  }
+
+  function label3D(x,y,z,text,col,alpha){
+    const p=proj(x,y,z);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=col;ctx.font='bold 11px JetBrains Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=col;ctx.shadowBlur=8;ctx.fillText(text,p.sx,p.sy);ctx.restore();
+  }
+
+  function drawArrow(tipX,tipY,tipZ,t,radius){
+    const O=proj(0,0,0),T=proj(tipX,tipY,tipZ);
+    const dx=T.sx-O.sx,dy=T.sy-O.sy,len=Math.hypot(dx,dy);if(len<1)return;
+    const ux=dx/len,uy=dy/len;
+    [[20,.03,20],[10,.07,10],[4,.18,4],[2,.55,0],[1.2,.9,0]].forEach(([lw,a,bl])=>{
+      ctx.save();ctx.shadowBlur=bl;ctx.shadowColor='#3b82f6';ctx.strokeStyle='#60a5fa';ctx.lineWidth=lw;ctx.globalAlpha=a;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(O.sx,O.sy);ctx.lineTo(T.sx-ux*12,T.sy-uy*12);ctx.stroke();ctx.restore();
+    });
+    const ang=Math.atan2(dy,dx),hL=16,hA=.40;
+    ctx.save();ctx.shadowBlur=16;ctx.shadowColor='#93c5fd';ctx.fillStyle='#93c5fd';ctx.globalAlpha=.95;
+    ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(T.sx-hL*Math.cos(ang-hA),T.sy-hL*Math.sin(ang-hA));ctx.lineTo(T.sx-hL*Math.cos(ang+hA),T.sy-hL*Math.sin(ang+hA));ctx.closePath();ctx.fill();ctx.restore();
+    const pulse=6+Math.sin(t*4)*2.5;
+    const grd=ctx.createRadialGradient(T.sx,T.sy,0,T.sx,T.sy,pulse*2.8);
+    grd.addColorStop(0,'rgba(219,234,254,.98)');grd.addColorStop(.3,'rgba(147,197,253,.75)');grd.addColorStop(.7,'rgba(59,130,246,.30)');grd.addColorStop(1,'rgba(37,99,235,0)');
+    ctx.save();ctx.shadowBlur=24;ctx.shadowColor='#60a5fa';ctx.globalAlpha=1;ctx.beginPath();ctx.arc(T.sx,T.sy,pulse*2.8,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();ctx.restore();
+    const E=proj(tipX,0,tipZ);
+    ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='#3b82f6';ctx.globalAlpha=.18;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(E.sx,E.sy);ctx.stroke();ctx.restore();
+    dot3D(tipX,0,tipZ,3,'#3b82f6',.35);
+  }
+
+  let t0=null,theta=Math.PI/4,phi=0;
+  function draw(ts){
+    if(!t0)t0=ts;const t=(ts-t0)/1000;
+    ctx.clearRect(0,0,W,H);
+    if(!dragging)rotY+=.006;
+    phi=t*.55; theta=Math.PI/4+Math.sin(t*.38)*.42;
+    const tipX=R*Math.sin(theta)*Math.cos(phi),tipY=R*Math.cos(theta),tipZ=R*Math.sin(theta)*Math.sin(phi);
+
+    // Sphere shell
+    ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
+    const bg=ctx.createRadialGradient(cx-R*.28,cy-R*.28,R*.05,cx,cy,R*1.1);
+    bg.addColorStop(0,'rgba(30,58,120,.18)');bg.addColorStop(.5,'rgba(10,10,20,.10)');bg.addColorStop(1,'rgba(0,0,0,.28)');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    const hl=ctx.createRadialGradient(cx-R*.40,cy-R*.38,0,cx-R*.25,cy-R*.25,R*.55);
+    hl.addColorStop(0,'rgba(96,165,250,.09)');hl.addColorStop(.5,'rgba(37,99,235,.04)');hl.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=hl;ctx.fillRect(0,0,W,H);ctx.restore();
+
+    for(let i=0;i<8;i++){const a=(i/8)*Math.PI;circle3D(Math.sin(a),0,Math.cos(a),R,'#1e3a5f',.28,.7);}
+    [.25,.5,.75].forEach(f=>{const y=R*(1-2*f);latRing(y,f===.5?'#1e40af':'#1e3a5f',f===.5?.52:.22,f===.5?1.2:.7);});
+
+    const L=R*1.22;
+    line3D(0,L,0,0,-L,0,'#475569',.45,1);
+    line3D(-L,0,0,L,0,0,'#2d3d50',.35,.8);
+    line3D(0,0,-L,0,0,L,'#2d3d50',.28,.8,true);
+    dot3D(0,R,0,4,'#60a5fa',.85);dot3D(0,-R,0,4,'#60a5fa',.85);
+    label3D(0,R*1.14,0,'|0⟩','#60a5fa',.65);label3D(0,-R*1.14,0,'|1⟩','#60a5fa',.65);
+    label3D(R*1.13,0,0,'|+⟩','#334d66',.45);label3D(-R*1.13,0,0,'|−⟩','#334d66',.45);
+    dot3D(0,0,0,2.5,'#475569',.55);
+    drawArrow(tipX,tipY,tipZ,t,R);
+
+    document.getElementById('h-theta').textContent=(theta*180/Math.PI).toFixed(1)+'°';
+    document.getElementById('h-phi').textContent=(((phi*180/Math.PI)%360+360)%360).toFixed(1)+'°';
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ══════════════════════════════════════════
+   LAB PAGE — Bloch sphere + noise + graph
+══════════════════════════════════════════ */
+let labInited = false;
+let labRotX=0.30, labRotY=0;
+let labDragging=false, labLMX=0, labLMY=0;
+let labPaused=false;
+let labT0=null, labT=0;
+let labTheta=Math.PI/4, labPhi=0;
+
+// Noise params [0..1]
+let noise = { depol:0, phase:0, bit:0, amp:.01 };
+let blochR = 1.0; // coherence radius (shrinks with noise)
+let graphHistory = []; // {r, x, y, z}
+const HIST_LEN = 200;
+
+let graphFilters = { coh:true, x:false, y:false, z:false };
+let activeInitState = 0; // 0=|0>, 1=|1>, 2=|+>, 3=|->
+let snapshots = [];
+
+function updateNoise() {
+  noise.depol  = parseInt(document.getElementById('s-depol').value)/100;
+  noise.phase  = parseInt(document.getElementById('s-phase').value)/100;
+  noise.bit    = parseInt(document.getElementById('s-bit').value)/100;
+  noise.amp    = parseInt(document.getElementById('s-amp').value)/100;
+
+  document.getElementById('v-depol').textContent   = Math.round(noise.depol*100)+'%';
+  document.getElementById('v-phase').textContent   = Math.round(noise.phase*100)+'%';
+  document.getElementById('v-bit').textContent     = Math.round(noise.bit*100)+'%';
+  document.getElementById('v-amp').textContent     = Math.round(noise.amp*100)+'%';
+}
+
+function applyPreset(name){
+  const sets={
+    clean:  [0,0,0,0],
+    noisy:  [80,50,30,20],
+    t1only: [0,0,0,50],
+    phase:  [0,70,0,5],
+  };
+  if(name==='pause'){togglePause();return;}
+  const s=sets[name]||sets.clean;
+  const ids=['s-depol','s-phase','s-bit','s-amp'];
+  ids.forEach((id,i)=>document.getElementById(id).value=s[i]);
+  updateNoise();
+}
+
+function resetState(){
+  noise={depol:0,phase:0,bit:0,amp:.01};
+  ['s-depol','s-phase','s-bit','s-amp'].forEach(id=>document.getElementById(id).value=id==='s-amp'?1:0);
+  updateNoise();
+  graphHistory=[];
+  labT0=null;
+}
+
+function setInitState(n){
+  activeInitState=n;
+  ['sb-0','sb-1','sb-plus','sb-minus'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('active',i===n);
+  });
+  // Set initial theta/phi
+  const states=[[0,0],[Math.PI,0],[Math.PI/2,0],[Math.PI/2,Math.PI]];
+  labTheta=states[n][0]; labPhi=states[n][1];
+}
+
+function togglePause(){
+  labPaused=!labPaused;
+  document.getElementById('pause-btn').textContent=labPaused?'▶ Resume':'⏸ Pause';
+}
+
+function toggleFilter(key, btn){
+  graphFilters[key]=!graphFilters[key];
+  btn.classList.toggle('active', graphFilters[key]);
+}
+
+function takeSnapshot(){
+  const coh = parseFloat(document.getElementById('stat-coh').textContent);
+  const t = new Date().toLocaleTimeString();
+  snapshots.unshift({t, coh, theta:labTheta, phi:labPhi});
+  if(snapshots.length>4) snapshots.pop();
+  renderSnapshots();
+}
+
+function renderSnapshots(){
+  const el = document.getElementById('snapshots-list');
+  if(!snapshots.length){el.innerHTML='<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#334155;text-align:center;padding:20px 0;">No snapshots yet.</div>';return;}
+  el.innerHTML=snapshots.map(s=>`
+    <div class="snap-item">
+      <div class="snap-label">${s.t}</div>
+      |R| = ${s.coh.toFixed(3)}  θ=${(s.theta*180/Math.PI).toFixed(1)}°
+    </div>`).join('');
+}
+
+/* Lab canvas init */
+function initLabCanvas(){
+  if(labInited) return;
+  labInited=true;
+
+  const canvas=document.getElementById('lab-canvas');
+  const graphC=document.getElementById('graph-canvas');
+  const fidelC=document.getElementById('fidelity-bar-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+
+  // Size graph canvas
+  function sizeGraph(){
+    const ga=document.querySelector('.graph-area');
+    if(!ga)return;
+    graphC.width=ga.clientWidth-32;  graphC.height=90;
+    fidelC.width=ga.clientWidth-32;  fidelC.height=22;
+  }
+  sizeGraph();
+  window.addEventListener('resize',sizeGraph);
+
+  const W=340,H=340,cx2=170,cy2=170;
+
+  canvas.addEventListener('mousedown',e=>{labDragging=true;labLMX=e.clientX;labLMY=e.clientY;});
+  window.addEventListener('mouseup',()=>labDragging=false);
+  window.addEventListener('mousemove',e=>{
+    if(!labDragging)return;
+    labRotY+=(e.clientX-labLMX)*.013; labRotX+=(e.clientY-labLMY)*.013;
+    labRotX=Math.max(-1.5,Math.min(1.5,labRotX));
+    labLMX=e.clientX;labLMY=e.clientY;
+  });
+  canvas.addEventListener('dblclick',takeSnapshot);
+
+  function proj2(x,y,z,R){
+    const cosX=Math.cos(labRotX),sinX=Math.sin(labRotX);
+    const y1=y*cosX-z*sinX, z1=y*sinX+z*cosX;
+    const cosY=Math.cos(labRotY),sinY=Math.sin(labRotY);
+    const x2=x*cosY+z1*sinY, z2=-x*sinY+z1*cosY;
+    const d=800,s=d/(d+z2+R);
+    return{sx:cx2+x2*s,sy:cy2-y1*s,depth:z2};
+  }
+
+  function lc3(x1,y1,z1,x2,y2,z2,col,alpha,lw,dashed,R){
+    const a=proj2(x1,y1,z1,R),b=proj2(x2,y2,z2,R);
+    ctx.save();if(dashed)ctx.setLineDash([4,6]);ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);
+    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
+  }
+
+  function circle3L(nx,ny,nz,r,col,alpha,lw,R){
+    let ax,ay,az;
+    if(Math.abs(nx)<.9){ax=0;ay=-nz;az=ny;}else{ax=-ny;ay=nx;az=0;}
+    const la=Math.hypot(ax,ay,az);ax/=la;ay/=la;az/=la;
+    const bx=ny*az-nz*ay,by=nz*ax-nx*az,bz=nx*ay-ny*ax;
+    const N=96;
+    ctx.save();ctx.beginPath();
+    for(let i=0;i<=N;i++){const a=(i/N)*Math.PI*2,c=Math.cos(a)*r,s=Math.sin(a)*r;const p=proj2(c*ax+s*bx,c*ay+s*by,c*az+s*bz,R);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
+  }
+
+  function latR(yOff,col,alpha,lw,R){
+    const r=Math.sqrt(Math.max(0,R*R-yOff*yOff));if(r<1)return;
+    ctx.save();ctx.beginPath();
+    for(let i=0;i<=96;i++){const a=(i/96)*Math.PI*2;const p=proj2(Math.cos(a)*r,yOff,Math.sin(a)*r,R);i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle=col;ctx.globalAlpha=alpha;ctx.lineWidth=lw||1;ctx.stroke();ctx.restore();
+  }
+
+  function dot3L(x,y,z,r,col,alpha,R){
+    const p=proj2(x,y,z,R);ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(p.sx,p.sy,r,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.restore();
+  }
+
+  function label3L(x,y,z,text,col,alpha,R){
+    const p=proj2(x,y,z,R);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=col;ctx.font='bold 10px JetBrains Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,p.sx,p.sy);ctx.restore();
+  }
+
+  function drawLabSphere(R){
+    ctx.save();ctx.beginPath();ctx.arc(cx2,cy2,R,0,Math.PI*2);ctx.clip();
+    const bg=ctx.createRadialGradient(cx2-R*.28,cy2-R*.28,R*.05,cx2,cy2,R*1.1);
+    bg.addColorStop(0,'rgba(20,42,90,.30)');bg.addColorStop(.5,'rgba(10,10,20,.18)');bg.addColorStop(1,'rgba(0,0,0,.40)');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    const hl=ctx.createRadialGradient(cx2-R*.38,cy2-R*.36,0,cx2-R*.22,cy2-R*.22,R*.6);
+    hl.addColorStop(0,'rgba(100,180,255,.10)');hl.addColorStop(.5,'rgba(40,100,200,.05)');hl.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=hl;ctx.fillRect(0,0,W,H);ctx.restore();
+  }
+
+  function drawLabGrid(R){
+    for(let i=0;i<8;i++){const a=(i/8)*Math.PI;circle3L(Math.sin(a),0,Math.cos(a),R,'#1e3a6a',.35,.8,R);}
+    [.25,.5,.75].forEach(f=>{const y=R*(1-2*f);latR(y,f===.5?'#1e40af':'#1e3a5f',f===.5?.55:.25,f===.5?1.2:.8,R);});
+  }
+
+  function drawLabAxes(R){
+    const L=R*1.18;
+    lc3(0,L,0,0,-L,0,'#475569',.5,1,false,R);
+    lc3(-L,0,0,L,0,0,'#2d3d50',.38,.8,false,R);
+    lc3(0,0,-L,0,0,L,'#2d3d50',.28,.8,true,R);
+    dot3L(0,R,0,4,'#60a5fa',.85,R);dot3L(0,-R,0,4,'#60a5fa',.85,R);
+    label3L(0,R*1.13,0,'|0⟩','#60a5fa',.7,R);
+    label3L(0,-R*1.13,0,'|1⟩','#60a5fa',.7,R);
+    label3L(R*1.12,0,0,'+X','#334d66',.45,R);
+    label3L(-R*1.12,0,0,'−X','#334d66',.45,R);
+  }
+
+  function drawLabVector(tipX,tipY,tipZ,t,R){
+    const O=proj2(0,0,0,R),T=proj2(tipX,tipY,tipZ,R);
+    const dx=T.sx-O.sx,dy=T.sy-O.sy,len=Math.hypot(dx,dy);if(len<1)return;
+    const ux=dx/len,uy=dy/len;
+    // White glowing arrow (matching video)
+    [[16,.025,16],[8,.07,8],[3.5,.20,3],[1.8,.70,0],[1,.95,0]].forEach(([lw,a,bl])=>{
+      ctx.save();ctx.shadowBlur=bl;ctx.shadowColor='#ffffff';ctx.strokeStyle='#e2e8f0';
+      ctx.lineWidth=lw;ctx.globalAlpha=a;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(O.sx,O.sy);ctx.lineTo(T.sx-ux*11,T.sy-uy*11);ctx.stroke();ctx.restore();
+    });
+    const ang=Math.atan2(dy,dx),hL=14,hA=.42;
+    ctx.save();ctx.shadowBlur=12;ctx.shadowColor='#fff';ctx.fillStyle='#e2e8f0';ctx.globalAlpha=.95;
+    ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(T.sx-hL*Math.cos(ang-hA),T.sy-hL*Math.sin(ang-hA));ctx.lineTo(T.sx-hL*Math.cos(ang+hA),T.sy-hL*Math.sin(ang+hA));ctx.closePath();ctx.fill();ctx.restore();
+    // tip pulse
+    const pulse=4+Math.sin(t*5)*1.8;
+    const g=ctx.createRadialGradient(T.sx,T.sy,0,T.sx,T.sy,pulse*3);
+    g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.4,'rgba(200,230,255,.55)');g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.save();ctx.shadowBlur=20;ctx.shadowColor='#fff';ctx.beginPath();ctx.arc(T.sx,T.sy,pulse*3,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.restore();
+    // projection line
+    const E=proj2(tipX,0,tipZ,R);
+    ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='#60a5fa';ctx.globalAlpha=.20;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(T.sx,T.sy);ctx.lineTo(E.sx,E.sy);ctx.stroke();ctx.restore();
+    dot3L(tipX,0,tipZ,3,'#60a5fa',.35,R);
+    dot3L(0,0,0,3,'#475569',.55,R);
+  }
+
+  /* Graph rendering */
+  function drawGraph(){
+    const gctx=graphC.getContext('2d');
+    const GW=graphC.width,GH=graphC.height;
+    gctx.clearRect(0,0,GW,GH);
+    // background
+    gctx.fillStyle='rgba(255,255,255,0.02)';gctx.fillRect(0,0,GW,GH);
+    // grid lines
+    gctx.strokeStyle='rgba(255,255,255,0.04)';gctx.lineWidth=1;
+    [0,.25,.5,.75,1].forEach(f=>{
+      const y=GH/2+(f-.5)*GH*.9;
+      gctx.beginPath();gctx.moveTo(0,y);gctx.lineTo(GW,y);gctx.stroke();
+    });
+
+    if(graphHistory.length<2)return;
+
+    const step=GW/HIST_LEN;
+    const series=[
+      {key:'r',  col:'#60a5fa', active:graphFilters.coh},
+      {key:'x',  col:'#f87171', active:graphFilters.x},
+      {key:'y',  col:'#4ade80', active:graphFilters.y},
+      {key:'z',  col:'#a78bfa', active:graphFilters.z},
+    ];
+
+    series.forEach(s=>{
+      if(!s.active && s.key!=='r') return; // always draw coherence
+      gctx.save();
+      gctx.beginPath();
+      gctx.strokeStyle=s.col;
+      gctx.lineWidth= s.key==='r'?1.8:1.2;
+      gctx.globalAlpha= s.key==='r'?0.9:0.65;
+      graphHistory.forEach((pt,i)=>{
+        const x=i*step;
+        const val=pt[s.key];
+        const y=GH/2 - val*(GH*.45);
+        i===0?gctx.moveTo(x,y):gctx.lineTo(x,y);
+      });
+      gctx.stroke();
+      gctx.restore();
+    });
+  }
+
+  function drawFidelityBar(){
+    const fc=fidelC.getContext('2d');
+    const FW=fidelC.width,FH=fidelC.height;
+    fc.clearRect(0,0,FW,FH);
+    fc.fillStyle='rgba(255,255,255,0.04)';fc.fillRect(0,0,FW,FH);
+    const coh=blochR;
+    const grad=fc.createLinearGradient(0,0,FW*coh,0);
+    grad.addColorStop(0,'#1d4ed8');grad.addColorStop(1,coh>0.5?'#22c55e':'#ef4444');
+    fc.fillStyle=grad;fc.fillRect(0,0,FW*coh,FH);
+    // label
+    fc.fillStyle='rgba(255,255,255,.5)';fc.font='9px JetBrains Mono,monospace';fc.textBaseline='middle';
+    fc.fillText('FIDELITY  '+( coh*100).toFixed(1)+'%',8,FH/2);
+  }
+
+  /* Apply selected channels to a Bloch vector (x,y,z). */
+  function applyNoiseToBloch(x,y,z){
+    // Depolarizing: isotropic shrink toward maximally mixed state.
+    const depolScale = 1 - noise.depol;
+    x *= depolScale; y *= depolScale; z *= depolScale;
+
+    // Bit flip: X invariant, Y/Z attenuate with sign possible at p>0.5.
+    const bitScale = 1 - 2*noise.bit;
+    y *= bitScale; z *= bitScale;
+
+    // Phase flip: Z invariant, X/Y attenuate with sign possible at p>0.5.
+    const phaseScale = 1 - 2*noise.phase;
+    x *= phaseScale; y *= phaseScale;
+
+    // Amplitude damping toward |0> (+Z in this simulation's logical basis).
+    const g = noise.amp;
+    const ampXY = Math.sqrt(Math.max(0,1-g));
+    x *= ampXY; y *= ampXY;
+    z = (1-g)*z + g;
+
+    return {x,y,z};
+  }
+
+  /* Main lab loop */
+  function labLoop(ts){
+    if(!document.getElementById('lab-page').classList.contains('active')){requestAnimationFrame(labLoop);return;}
+    if(!labT0)labT0=ts;
+    if(!labPaused) labT=(ts-labT0)/1000;
+    ctx.clearRect(0,0,W,H);
+
+    if(!labDragging && !labPaused) labRotY+=.005;
+
+    const sphereR = 140; // fixed outer shell
+
+    // Animate state
+    if(!labPaused){
+      labPhi = labT*0.65;
+      const baseTheta = [0,Math.PI,Math.PI/2,Math.PI/2][activeInitState];
+      labTheta = baseTheta + Math.sin(labT*.40)*.35*(1-noise.depol*.7);
+    }
+
+    // Base pure-state Bloch vector from (theta, phi).
+    const baseX = Math.sin(labTheta)*Math.cos(labPhi);
+    const baseY = Math.sin(labTheta)*Math.sin(labPhi);
+    const baseZ = Math.cos(labTheta);
+    const noisy = applyNoiseToBloch(baseX,baseY,baseZ);
+    blochR = Math.min(1,Math.hypot(noisy.x,noisy.y,noisy.z));
+
+    // Rendering axes use Y as vertical, so map logical Z -> render Y.
+    const tipX = sphereR * noisy.x;
+    const tipY = sphereR * noisy.z;
+    const tipZ = sphereR * noisy.y;
+
+    // Draw outer ghost sphere (always full size)
+    circle3L(0,1,0, sphereR,'#0f2040',.45,.8,sphereR); // equator
+    for(let i=0;i<8;i++){const a=(i/8)*Math.PI;circle3L(Math.sin(a),0,Math.cos(a),sphereR,'#0f2040',.22,.6,sphereR);}
+    [.25,.5,.75].forEach(f=>{const y=sphereR*(1-2*f);latR(y,'#0f2040',f===.5?.38:.18,.6,sphereR);});
+
+    // Filled colored sphere at blochR size (if small enough, different color)
+    drawLabSphere(sphereR);
+    drawLabGrid(sphereR);
+    drawLabAxes(sphereR);
+    drawLabVector(tipX,tipY,tipZ,labT,sphereR);
+
+    // History
+    if(!labPaused){
+      graphHistory.push({
+        r:blochR,
+        x:noisy.x,
+        y:noisy.y,
+        z:noisy.z
+      });
+      if(graphHistory.length>HIST_LEN)graphHistory.shift();
+    }
+    drawGraph();
+    drawFidelityBar();
+
+    // Stats
+    const coh=blochR.toFixed(3);
+    const pur=Math.min(1,(0.5+0.5*blochR*blochR)).toFixed(3);
+    const zp=(0.5+0.5*noisy.z).toFixed(3);
+    const fid=blochR.toFixed(3);
+    const cohEl=document.getElementById('stat-coh');
+    const purEl=document.getElementById('stat-pur');
+    cohEl.textContent=coh; purEl.textContent=pur;
+    document.getElementById('stat-z').textContent=zp;
+    document.getElementById('stat-fid').textContent=fid;
+    const setColor=(el,v)=>{el.className='stat-val '+(v>0.8?'green':v>0.4?'yellow':'red');};
+    setColor(cohEl,blochR); setColor(purEl,parseFloat(pur));
+
+    // Badge
+    const badge=document.getElementById('coherence-badge');
+    if(blochR>0.85){badge.textContent='COHERENT STATE';badge.className='state-badge badge-coherent';}
+    else if(blochR>0.4){badge.textContent='PARTIALLY MIXED';badge.className='state-badge badge-noisy';}
+    else{badge.textContent='MAXIMALLY MIXED';badge.className='state-badge badge-mixed';}
+
+    requestAnimationFrame(labLoop);
+  }
+  requestAnimationFrame(labLoop);
+}
+</script>
+</body>
+</html>
